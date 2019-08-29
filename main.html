@@ -11,9 +11,13 @@
   // Assets
   const bricksUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616212100481679368/block.png";
   const grassUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
+  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/616713067551784964/mario1.png";
+
+  // Global variables
+  const gravity = 1
   
-  class player {
-    constructor(picArray, respawnX, respawnY) {
+  class Player {
+    constructor(respawnX, respawnY) {
       this.x = respawnX;
       this.y = respawnY;
       this.xv = 0;
@@ -23,19 +27,22 @@
     }
     
     // Function that checks if any block is within range to collide
-    static checkCollision() {
+    checkCollision() {
+      // Set char to be in the air so if it isn't on the ground he can't air jump
+      this.touching_ground = false;
+
       // For every block
       for (var i = 0; i < mapArray.length; i++) {
         // If in range
         if (abs(this.x / blockSize - mapArray[i][0]) < blockSize * 3 && abs(this.y / blockSize - mapArray[i][1]) < 3) {
           //Perform collision
-        	
+        	this.performCollision(mapArray[i][0] * blockSize, totalHeight * scale_factor - blockSize * mapArray[i][1]);
         }
       }
     }
     
     // Performs collision by detecting what side of the block was impacted and adjusting the character velocity
-    static performCollision(blockX,blockY) {
+    performCollision(blockX,blockY) {
       // Calculate delta in coming tick
       var dx_next = abs(this.x + this.xv - blockX);
       var dy_next = abs(this.y + this.yv - blockY);
@@ -52,7 +59,8 @@
       if (dy_next > blockSize && dx_next > blockSize) {
         return null
       }
-      
+      console.log("collided")
+
       if (y_next + blockSize > blockY && this.y < y_next) {
           
         // Top
@@ -64,12 +72,12 @@
         // Bottom
         this.yv = -dy+blockSize;
           
-      }else if (x_next + blockSize > blockX && this.x < posX) {
+      }else if (x_next + blockSize > blockX && this.x < x_next) {
           
         // Left
         this.yv = -dy+blockSize;
             
-      }else if (x_next < blockX + blockSize && this.x > posX) {
+      }else if (x_next < blockX + blockSize && this.x > x_next) {
           
         // Right
         this.xv = dx-blockSize;
@@ -77,13 +85,24 @@
       }
     }
 
-    static render() {
+    render() {
       var url;
 
       if (this.state == 1) {
-        url
+        url = mario1Url;
       }
-      image();
+      picture(this.x,this.y,url);
+    }
+
+    apply_forces() {
+      if (! this.touching_ground) {
+        this.yv += gravity
+      }
+    }
+
+    update_position() {
+      this.x += this.xv
+      this.y += this.yv
     }
   }
   
@@ -104,9 +123,15 @@
     }
   }
   
+  let player1 = new Player(0,0);
+
   function update() {
   	clearScreen();
-  	drawMap();
+    drawMap();
+    player1.apply_forces();
+    player1.checkCollision();
+    player1.update_position();
+    player1.render();
   }
   
 
