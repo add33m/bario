@@ -1,7 +1,7 @@
 <script src="https://koda.nu/simple.js">
 
   // Map array
-  const mapArray = [[0,1,"grass"],[1,1,"grass"],[2,1,"grass"],[3,1,"grass"],[4,1,"grass"]];
+  const mapArray = [[0,5,"grass"],[1,5,"grass"],[2,4,"grass"],[3,5,"grass"],[4,5,"grass"]];
   const blockSize = 63.1;
   
   // Scaling (10 blocks tall)
@@ -34,9 +34,9 @@
       // For every block
       for (var i = 0; i < mapArray.length; i++) {
         // If in range
-        if (abs(this.x / blockSize - mapArray[i][0]) < blockSize * 3 && abs(this.y / blockSize - mapArray[i][1]) < 3) {
+        if (abs(this.x / blockSize - mapArray[i][0]) < 3 && abs(this.y / blockSize - mapArray[i][1]) < 3) {
           //Perform collision
-        	this.performCollision(mapArray[i][0] * blockSize, totalHeight * scale_factor - blockSize * mapArray[i][1]);
+        	this.performCollision(mapArray[i][0] * blockSize, totalHeight - blockSize * mapArray[i][1]);
         }
       }
     }
@@ -64,18 +64,18 @@
       if (y_next + blockSize > blockY && this.y < y_next) {
           
         // Top
-        this.yv = dy-blockSize;
+        this.yv = blockSize-dy;
         this.touching_ground = true;
           
       }else if (y_next < blockY + blockSize && this.y > y_next && y_next > blockY) {
           
         // Bottom
-        this.yv = -dy+blockSize;
+        this.yv = dy-blockSize;
           
       }else if (x_next + blockSize > blockX && this.x < x_next) {
           
         // Left
-        this.yv = -dy+blockSize;
+        this.xv = -dx+blockSize;
             
       }else if (x_next < blockX + blockSize && this.x > x_next) {
           
@@ -119,7 +119,7 @@
       }else if (mapArray[i][2] == "bricks") {
         url = bricksUrl
       }
-      picture(mapArray[i][0] * blockSize, totalHeight * scale_factor - blockSize * mapArray[i][1],url);
+      picture(mapArray[i][0] * blockSize, blockSize * mapArray[i][1],url);
     }
   }
   
