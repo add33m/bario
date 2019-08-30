@@ -1,29 +1,43 @@
 <script src="https://koda.nu/simple.js">
 
   // Map array
-  const mapArray = [[0,5,"grass"],[1,5,"grass"],[2,4,"grass"],[3,5,"grass"],[4,5,"grass"]];
-  const blockSize = 63.1;
+  const mapArray = [[0,5,"bricks"],[1,5,"bricks"],[2,5,"bricks"],[2,6,"block"],[3,5,"bricks"],[4,5,"bricks"],[5,5,"bricks"],[6,5,"bricks"],[7,5,"bricks"],[8,5,"bricks"]];
+  const blockSize = 32;
   
   // Scaling (10 blocks tall)
-  const scale_factor = blockSize * 10 / totalHeight;
+  const scale_factor = blockSize * 20 / totalHeight;
   scale(1 / scale_factor,1 / scale_factor);
   
-  // Assets
-  const bricksUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616212100481679368/block.png";
+  // ASSETS:
+  // Textures
+  const bricksUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
+  const blockUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
   const grassUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
-  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/616713067551784964/mario1.png";
+  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
+  // Sounds
+  const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
+  const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
+
+  // Preload sounds
+  preloadSound(deathUrl);
+  preloadSound(jumpUrl);
 
   // Global variables
-  const gravity = 1
+  const gravity = 1;
   
   class Player {
     constructor(respawnX, respawnY) {
-      this.x = respawnX;
-      this.y = respawnY;
+      // Set up variables and constants of the player and Player class
+      this.x = respawnX * blockSize;
+      this.y = totalHeight * scale_factor - respawnY * blockSize;
       this.xv = 0;
       this.yv = 0;
       this.touching_ground = false;
       this.state = 1;
+      this.debug = false;
+      this.width = blockSize;
+      this.height = blockSize;
+      this.friction = 1.4
     }
     
     // Function that checks if any block is within range to collide
@@ -33,59 +47,63 @@
 
       // For every block
       for (var i = 0; i < mapArray.length; i++) {
+        var dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
+        var dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
+
         // If in range
-        if (abs(this.x / blockSize - mapArray[i][0]) < 3 && abs(this.y / blockSize - mapArray[i][1]) < 3) {
-          //Perform collision
-        	this.performCollision(mapArray[i][0] * blockSize, totalHeight - blockSize * mapArray[i][1]);
+        if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2)
+        {
+          // Perform collision
+          this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize});
         }
       }
     }
-    
-    // Performs collision by detecting what side of the block was impacted and adjusting the character velocity
-    performCollision(blockX,blockY) {
-      // Calculate delta in coming tick
-      var dx_next = abs(this.x + this.xv - blockX);
-      var dy_next = abs(this.y + this.yv - blockY);
-      
-      // Calculate pos in coming tick
-      var x_next = this.x - blockX;
-      var y_next = this.y - blockY;
-      
-      // Calculate delta in current tick
-      var dx = abs(this.x - blockX);
-      var dy = abs(this.y - blockY);
-      
-      // If not going to collide, don't perform calculation
-      if (dy_next > blockSize && dx_next > blockSize) {
-        return null
-      }
-      console.log("collided")
 
-      if (y_next + blockSize > blockY && this.y < y_next) {
-          
-        // Top
-        this.yv = blockSize-dy;
-        this.touching_ground = true;
-          
-      }else if (y_next < blockY + blockSize && this.y > y_next && y_next > blockY) {
-          
-        // Bottom
-        this.yv = dy-blockSize;
-          
-      }else if (x_next + blockSize > blockX && this.x < x_next) {
-          
-        // Left
-        this.xv = -dx+blockSize;
-            
-      }else if (x_next < blockX + blockSize && this.x > x_next) {
-          
-        // Right
-        this.xv = dx-blockSize;
-          
+    collide(object) {
+      // Calculate distance to object for this and next tick
+      var dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
+      var dyv = abs((this.y + this.yv + this.height/2) - (object.y + object.height/2));
+      var dx = abs((this.x + this.width/2) - (object.x + object.width/2));
+      var dy = abs((this.y + this.height/2) - (object.y + object.height/2));
+
+      // Debug line indicating what blocks are being calculated for collision
+      if (this.debug) {
+        line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2, "black");
+      }
+
+      // Check if character will be inside object next tick
+      if (dyv < this.height/2 + object.height/2 && dxv < this.width/2 + object.width/2) {
+        
+        // Check if the object is coming in the x axis
+        if (dx * (this.height / 2 + object.height / 2) >= dy * (this.width / 2 + object.width / 2)) {
+
+          // Change the velocity so the character intersects the border of the block next tick 
+          if (this.x - object.x > 0) {
+            // From the left
+            this.xv = -(dx - this.width/2 - object.width/2);
+          } else {
+            // From the right
+            this.xv = dx - this.width/2 - object.width/2;
+          }
+        }
+        // If not coming in the x axis, the object is coming in the y axis
+        else {
+
+          // Change the velocity so the character intersects the border of the block next tick 
+          if (this.y - object.y < 0) {
+            // From the top
+            this.yv = dy - this.height/2 - object.height/2;
+            this.touching_ground = true;            
+          } else {
+            // From the bottom
+            this.yv = -(dy - this.height/2 - object.height/2);
+          }
+        }
       }
     }
 
-    render() {
+    // Draw the player
+    draw() {
       var url;
 
       if (this.state == 1) {
@@ -94,36 +112,64 @@
       picture(this.x,this.y,url);
     }
 
+    // Apply gravity and movement forces to the player velocity
     apply_forces() {
+
+      // If not on the ground, add gravity
       if (! this.touching_ground) {
         this.yv += gravity
       }
+
+      // Add sidewards movement and friction if no sideways key is being held down
+      if (keyboard["d"]) {
+        // Left
+        this.xv = 6;
+      }else if (keyboard["a"]) {
+        // Right
+        this.xv = -6;
+      }else{
+        // Slow down movement using friction
+        if (abs(this.xv) < .5) {this.xv = 0}
+        this.xv = this.xv / this.friction
+      }
+
+      // Jump
+      if (keyboard["w"] && this.touching_ground) {
+        this.yv = -20;
+        playSound(jumpUrl, .4);
+      }
     }
 
+    // Apply player velocity to player position
     update_position() {
-      this.x += this.xv
-      this.y += this.yv
+      this.x += this.xv;
+      this.y += this.yv;
     }
   }
   
   
-  
-  
+  // Create player
+  let player1 = new Player(0,6);
+
   
   function drawMap() {
   	// Go through every block
     for (var i = 0; i < mapArray.length; i++) {
+
+      // Set the picture's url based on 
       var url;
       if (mapArray[i][2] == "grass") {
-        url = grassUrl      
+        url = grassUrl;      
       }else if (mapArray[i][2] == "bricks") {
-        url = bricksUrl
+        url = bricksUrl;
+      }else if (mapArray[i][2] == "block") {
+        url = blockUrl;
       }
-      picture(mapArray[i][0] * blockSize, blockSize * mapArray[i][1],url);
+
+      picture(mapArray[i][0] * blockSize, totalHeight * scale_factor - blockSize * mapArray[i][1],url);
     }
   }
   
-  let player1 = new Player(0,0);
 
   function update() {
   	clearScreen();
@@ -131,7 +177,7 @@
     player1.apply_forces();
     player1.checkCollision();
     player1.update_position();
-    player1.render();
+    player1.draw();
   }
   
 
