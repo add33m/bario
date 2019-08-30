@@ -137,7 +137,11 @@
         this.xv = 20;
 
         // Respawn after the sound/animation is done
-        window.setTimeout(function(){this.respawn(this)}, 3200);
+        var player = this;
+        window.setTimeout(function() {
+          // Pass through this as player so context isn't lost
+          player.respawn(player)
+        }, 3200);
       }
 
       // Add sidewards movement and friction if no sideways key is being held down
