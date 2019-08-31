@@ -1,34 +1,51 @@
 <meta charset="UTF-8">
 <script src="https://koda.nu/simple.js">
 
+  /*
+    Made by add33m with (a bunch of) help from pelp3!
+    **pelpNgine 2.0**
+    Player size, block size, amount of blocks in the y axis of the screen and more can be changed by adjusting the right variables.
+  */
+
   // Map array
-  const mapArray = [[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,2,"block"],[3,1,"bricks"],[4,1,"bricks"],[5,1,"bricks"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
+  const mapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[5,1,"bricks"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
   const blockSize = 32;
   
   // Scaling (10 blocks tall)
   const scale_factor = blockSize * 20 / totalHeight;
   scale(1 / scale_factor,1 / scale_factor);
+  updatesPerSecond = 30;
   
   // ASSETS:
   // Textures
-  const bricksUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
-  const blockUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
-  const grassUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
-  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
+  var bricksUrl = new Image()
+  bricksUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
+  var blockUrl = new Image()
+  blockUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
+  var grassUrl = new Image()
+  grassUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
+  var qmarkUrl = new Image()
+  qmarkUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617123384593088516/block-193.gif";
+  var qmarkUsedUrl = new Image()
+  qmarkUsedUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617130212869799993/block-192.gif";
+  var mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
   // Sounds
   const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
   const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
+  const coinUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617145664618496016/smb_coin.wav";
 
   // Preload sounds
   preloadSound(deathUrl);
   preloadSound(jumpUrl);
+  preloadSound(coinUrl);
 
   // Global variables
   const gravity = 1;
+  var context = document.getElementById("canvas").getContext("2d");
   
-  class Player {
+  class Entity {
     constructor(respawnX, respawnY) {
-      // Set up variables and constants of the player and Player class
+      // Set up variables and constants of the entity and Entity class
       this.respawnX = respawnX;
       this.respawnY = respawnY;
       this.x = this.respawnX * blockSize;
@@ -36,11 +53,10 @@
       this.xv = 0;
       this.yv = 0;
       this.touching_ground = false;
-      this.state = 1;
       this.debug = false;
       this.width = blockSize;
       this.height = blockSize;
-      this.friction = 1.4;
+      this.activation_threshold = 5;
     }
     
     // Function that checks if any block is within range to collide
@@ -61,7 +77,18 @@
         if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2)
         {
           // Perform collision
-          this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize});
+          this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize, 
+            // Action function, will activate when a block is hit with enough velocity. Will give back the side as 0-3
+            action: function(side) {
+
+              // Play coin sound when hitting a coin block from the bottom
+              if (side == 3 && mapArray[i][2] == "coin_block") {
+                // Change to a used block so that the texture changes and the block can't be used again, then play the coin sound a bit later
+                mapArray[i][2] = "used_block";
+                window.setTimeout(function(){playSound(coinUrl,.4)},200)
+              }
+
+          }});
         }
       }
     }
@@ -78,57 +105,69 @@
         line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2, "black");
       }
 
-      // Check if character will be inside object next tick
+      // Check if entity will be inside object next tick
       if (dyv < this.height/2 + object.height/2 && dxv < this.width/2 + object.width/2) {
         
-        // Check if the object is coming in the x axis
-        if (dx * (this.height / 2 + object.height / 2) >= dy * (this.width / 2 + object.width / 2)) {
+        // Check if the entity is entering in the x axis
+        if (dx * (this.height / 2 + object.height / 2) > dy * (this.width / 2 + object.width / 2) && dy < this.height/2 + object.height/2) {
 
-          // Change the velocity so the character intersects the border of the block next tick 
+          // Change the velocity so the entity intersects the border of the block next tick 
           if (this.x - object.x > 0) {
             // From the left
+            if (object.action && abs(this.xv) > this.activation_threshold) {object.action(0)}
+
             this.xv = -(dx - this.width/2 - object.width/2);
           } else {
             // From the right
+            if (object.action && abs(this.xv) > this.activation_threshold) {object.action(1)}
+
             this.xv = dx - this.width/2 - object.width/2;
           }
         }
-        // If not coming in the x axis, the object is coming in the y axis
-        else {
+        // Check if the entity is entering in the y axis
+        if (dx * (this.height / 2 +object.height / 2) < dy * (this.width / 2 + object.width / 2) && dx < this.width/2 + object.width / 2) {
 
-          // Change the velocity so the character intersects the border of the block next tick 
+          // Change the velocity so the entity intersects the border of the block next tick 
           if (this.y - object.y < 0) {
             // From the top
+            if (object.action && abs(this.yv) > this.activation_threshold) {object.action(2)}
+
             this.yv = dy - this.height/2 - object.height/2;
             this.touching_ground = true;            
           } else {
             // From the bottom
+            if (object.action && abs(this.yv) > this.activation_threshold) {object.action(3)}
+
             this.yv = -(dy - this.height/2 - object.height/2);
           }
         }
       }
     }
 
-    // Draw the player
-    draw() {
-
-      // Set player texture url depending on player state
-      var url;
-      if (this.state == 1 || this.state == 0) {
-        url = mario1Url;
-      }
-
-      picture(this.x,this.y,url);
+    // Apply player velocity to player position
+    update_position() {
+      this.x += this.xv;
+      this.y += this.yv;
     }
-
-    // Apply gravity and input forces to player velocity, and check for death
+  }
+  
+  // Player subclass of Entity. Contains all functions related to interaction
+  class Player extends Entity {
+    constructor(respawnX,respawnY) {
+      super(respawnX,respawnY);
+      this.touching_ground = false;
+      this.state = 1;
+      this.friction = 1.4;
+    }
+    
+    // Apply gravity and input forces to entity velocity, and check for death
     apply_forces() {
 
       // If not on the ground, add gravity
       if (! this.touching_ground) {
         this.yv += gravity
       }
-      
+
       // If below y=0 and not already dead, kill the player and respawn
       if (this.y > totalHeight * scale_factor && this.state != 0) {
         playSound(deathUrl);
@@ -139,7 +178,7 @@
         // Respawn after the sound/animation is done
         var player = this;
         window.setTimeout(function() {
-          // Pass through this as player so context isn't lost
+          // Pass through 'this' as 'player' so context isn't lost
           player.respawn(player)
         }, 3200);
       }
@@ -164,12 +203,8 @@
       }
     }
 
-    // Apply player velocity to player position
-    update_position() {
-      this.x += this.xv;
-      this.y += this.yv;
-    }
 
+    // Respawns player when called upon
     respawn(player) {
       // Set state to alive
       player.state = 1;
@@ -180,32 +215,50 @@
       player.xv = 0;
       player.yv = 0;
     }
-  }
-  
-  
-  // Create player
-  let player1 = new Player(0,6);
 
+    // Draw the player
+    draw() {
+      // Set player texture url depending on player state
+      var url;
+      if (this.state == 1 || this.state == 0) {
+        url = mario1Url;
+      }
+
+      picture(this.x,this.y,url);
+    }
+  }
+
+  // Create player
+  let player1 = new Player(0,2);
   
   function drawMap() {
   	// Go through every block
     for (var i = 0; i < mapArray.length; i++) {
+      
+      var type = mapArray[i][2]
 
-      // Set the picture's url based on 
-      var url;
-      if (mapArray[i][2] == "grass") {
-        url = grassUrl;      
-      }else if (mapArray[i][2] == "bricks") {
-        url = bricksUrl;
-      }else if (mapArray[i][2] == "block") {
-        url = blockUrl;
+      // Set the picture's url based on block type
+      var image = new Image();
+
+      if (type == "grass") {
+        image = grassUrl;      
+      }else if (type == "bricks") {
+        image = bricksUrl;
+      }else if (type == "block") {
+        image = blockUrl;
+      }else if (type == "coin_block") {
+        image = qmarkUrl;
+      }else if (type == "used_block") {
+        image = qmarkUsedUrl;
       }
 
-      picture(mapArray[i][0] * blockSize, totalHeight * scale_factor - blockSize * mapArray[i][1],url);
+      // Draw if not an invisible block
+      if (type != "inv") {
+        context.drawImage(image,0,0,32,32,mapArray[i][0]*blockSize,totalHeight * scale_factor-mapArray[i][1]*blockSize,blockSize,blockSize);
+      }
     }
   }
   
-
   // Every game update, perform a tick and render
   function update() {
     clearScreen();
@@ -216,5 +269,4 @@
     player1.draw();
   }
   
-
 </script>
