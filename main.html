@@ -3,32 +3,37 @@
 
   /*
     Made by add33m with (a bunch of) help from pelp3!
-    **pelpNgine 2.0**
+    **pelp3Ngine 2.0**
     Player size, block size, amount of blocks in the y axis of the screen and more can be changed by adjusting the right variables.
   */
 
-  // Map array
-  const mapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[5,1,"bricks"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
+  // Map 
+  var mapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[5,1,"bricks"],[5,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
   const blockSize = 32;
   
-  // Scaling (10 blocks tall)
-  const scale_factor = blockSize * 20 / totalHeight;
+  // Scaling (12 blocks tall)
+  const scale_factor = blockSize * 12 / totalHeight;
   scale(1 / scale_factor,1 / scale_factor);
-  updatesPerSecond = 30;
+
+  // Canvas moving
+  var canvasPos = 0;
   
   // ASSETS:
-  // Textures
-  var bricksUrl = new Image()
+  // Define and preload texttures
+  const bricksUrl = new Image();
   bricksUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
-  var blockUrl = new Image()
+  const blockUrl = new Image();
   blockUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
-  var grassUrl = new Image()
+  const grassUrl = new Image();
   grassUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
-  var qmarkUrl = new Image()
+  const qmarkUrl = new Image();
   qmarkUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617123384593088516/block-193.gif";
-  var qmarkUsedUrl = new Image()
+  const qmarkUsedUrl = new Image();
   qmarkUsedUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617130212869799993/block-192.gif";
-  var mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
+  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
+  const goombaImg = new Image();
+  goombaImg.src = "https://cdn.discordapp.com/attachments/489085929726935041/617343550597890049/goomba.png";
+
   // Sounds
   const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
   const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
@@ -40,11 +45,16 @@
   preloadSound(coinUrl);
 
   // Global variables
-  const gravity = 1;
+  const gravity = 1.9;
+  const activation_threshold = 5;
+
   var context = document.getElementById("canvas").getContext("2d");
-  
+  updatesPerSecond = 30;
+
+  var iEntities = []
+
   class Entity {
-    constructor(respawnX, respawnY) {
+    constructor(respawnX, respawnY, classType) {
       // Set up variables and constants of the entity and Entity class
       this.respawnX = respawnX;
       this.respawnY = respawnY;
@@ -56,7 +66,7 @@
       this.debug = false;
       this.width = blockSize;
       this.height = blockSize;
-      this.activation_threshold = 5;
+      this.classType = classType;
     }
     
     // Function that checks if any block is within range to collide
@@ -70,25 +80,35 @@
 
       // For every block
       for (var i = 0; i < mapArray.length; i++) {
+        // Find delta between middle of player and middle of block
         var dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
         var dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
 
         // If in range
         if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2)
         {
-          // Perform collision
+          // Perform collision, passing through this as ent
+          var ent = this;
           this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize, 
-            // Action function, will activate when a block is hit with enough velocity. Will give back the side as 0-3
-            action: function(side) {
+            // Action function, will activate when a block is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
+            action: function(vel,side) {
 
-              // Play coin sound when hitting a coin block from the bottom
-              if (side == 3 && mapArray[i][2] == "coin_block") {
-                // Change to a used block so that the texture changes and the block can't be used again, then play the coin sound a bit later
-                mapArray[i][2] = "used_block";
-                window.setTimeout(function(){playSound(coinUrl,.4)},200)
+              // If entity is a player
+              if (ent.classType == "player") {
+                // Play coin sound when hitting a coin block from the bottom
+                if (side == 3 && mapArray[i][2] == "coin_block" && abs(vel) > activation_threshold) {
+                  // Change to a used block so that the texture changes and the block can't be used again, then play the coin sound a bit later
+                  mapArray[i][2] = "used_block";
+                  window.setTimeout(function(){playSound(coinUrl,.4)},200)
+                }
+
+                // **TEMPORARY**, if hitting a goomba from any side but the top, kill the player
+                if (side != 2 && mapArray[i][2] == "goomba" && ent.state > 0) {
+                  ent.state -= 1
+                }
               }
-
-          }});
+            }
+          });
         }
       }
     }
@@ -114,12 +134,12 @@
           // Change the velocity so the entity intersects the border of the block next tick 
           if (this.x - object.x > 0) {
             // From the left
-            if (object.action && abs(this.xv) > this.activation_threshold) {object.action(0)}
+            object.action(this.xv,0)
 
             this.xv = -(dx - this.width/2 - object.width/2);
           } else {
             // From the right
-            if (object.action && abs(this.xv) > this.activation_threshold) {object.action(1)}
+            object.action(this.xv,1)
 
             this.xv = dx - this.width/2 - object.width/2;
           }
@@ -130,13 +150,13 @@
           // Change the velocity so the entity intersects the border of the block next tick 
           if (this.y - object.y < 0) {
             // From the top
-            if (object.action && abs(this.yv) > this.activation_threshold) {object.action(2)}
+            object.action(this.yv,2)
 
             this.yv = dy - this.height/2 - object.height/2;
             this.touching_ground = true;            
           } else {
             // From the bottom
-            if (object.action && abs(this.yv) > this.activation_threshold) {object.action(3)}
+            object.action(this.yv,3)
 
             this.yv = -(dy - this.height/2 - object.height/2);
           }
@@ -154,34 +174,28 @@
   // Player subclass of Entity. Contains all functions related to interaction
   class Player extends Entity {
     constructor(respawnX,respawnY) {
-      super(respawnX,respawnY);
+      super(respawnX,respawnY,"player");
       this.touching_ground = false;
       this.state = 1;
       this.friction = 1.4;
+      this.jumped = false;
     }
     
     // Apply gravity and input forces to entity velocity, and check for death
     apply_forces() {
 
-      // If not on the ground, add gravity
-      if (! this.touching_ground) {
-        this.yv += gravity
-      }
+      // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
+        if (this.yv < 0 && keyboard["w"]) {
+          this.yv += gravity / 2;
+        } else {
+          this.yv += gravity
+        }
 
       // If below y=0 and not already dead, kill the player and respawn
-      if (this.y > totalHeight * scale_factor && this.state != 0) {
-        playSound(deathUrl);
-        this.state = 0;
-        this.yv = -15;
-        this.xv = 20;
+      if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
 
-        // Respawn after the sound/animation is done
-        var player = this;
-        window.setTimeout(function() {
-          // Pass through 'this' as 'player' so context isn't lost
-          player.respawn(player)
-        }, 3200);
-      }
+      // If player state is no longer above 0, perform death animation
+      if (this.state == 0) {this.kill()}
 
       // Add sidewards movement and friction if no sideways key is being held down
       if (keyboard["d"] && this.state > 0) {
@@ -197,14 +211,31 @@
       }
 
       // Jump
-      if (keyboard["w"] && this.touching_ground && this.state > 0) {
-        this.yv = -20;
+      if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
+        this.yv = -16;
         playSound(jumpUrl, .4);
-      }
+        // Prevent jumping again if not released jump key and landed
+        this.jumped = true
+      } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
     }
 
+    // Kills player
+    kill() {
+      // Play death sound and do death animation
+      playSound(deathUrl);
+      this.state = -1;
+      this.yv = -15;
+      this.xv = 20;
 
-    // Respawns player when called upon
+      // Respawn after the sound/animation is done
+      var player = this;
+        window.setTimeout(function() {
+          // Pass through 'this' as 'player' so context isn't lost
+          player.respawn(player)
+        }, 3200);
+    }
+
+    // Respawns player
     respawn(player) {
       // Set state to alive
       player.state = 1;
@@ -220,7 +251,7 @@
     draw() {
       // Set player texture url depending on player state
       var url;
-      if (this.state == 1 || this.state == 0) {
+      if (this.state <= 1) {
         url = mario1Url;
       }
 
@@ -228,33 +259,81 @@
     }
   }
 
+  class IEntity extends Entity {
+    constructor(type,respawnX,respawnY) {
+      super(respawnX,respawnY,"iEntity");
+      this.type = type;
+      this.ai = false;
+    }
+
+  }
+
   // Create player
   let player1 = new Player(0,2);
   
+  // Draw a non-animated image
+  function drawImg(image,x,y) {
+    context.drawImage(image,0,0,blockSize,blockSize,x * blockSize,totalHeight * scale_factor - y * blockSize,blockSize,blockSize)
+  }
+
+  // Draw an animated image. Frames must be stacked on top of each other (top = first frame) and equal in size
+  function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0) { // Speed should never exceed 2, or it will skip frames
+    // Find the frame based on the time, by rounding it down and then dividing it, taking the remainder as the frame
+    frame = Math.floor(performance.now() * speed / 100) % totalFrames
+    context.drawImage(image,x0,frame * blockSize + y0,blockSize,blockSize,x,y,blockSize,blockSize)
+  }
+
+  iEntities.push(new IEntity("goomba",5,2));
+
+  // Draw out the map
   function drawMap() {
+
+    // Find middle point on screen
+    var screen_mid = canvasPos + totalWidth * scale_factor / 2
+
   	// Go through every block
     for (var i = 0; i < mapArray.length; i++) {
-      
+      // Find block type
       var type = mapArray[i][2]
-
-      // Set the picture's url based on block type
-      var image = new Image();
-
-      if (type == "grass") {
-        image = grassUrl;      
-      }else if (type == "bricks") {
-        image = bricksUrl;
-      }else if (type == "block") {
-        image = blockUrl;
-      }else if (type == "coin_block") {
-        image = qmarkUrl;
-      }else if (type == "used_block") {
-        image = qmarkUsedUrl;
-      }
 
       // Draw if not an invisible block
       if (type != "inv") {
-        context.drawImage(image,0,0,32,32,mapArray[i][0]*blockSize,totalHeight * scale_factor-mapArray[i][1]*blockSize,blockSize,blockSize);
+
+        // Draw the image with the right texture, and animated if should be
+        if (type == "grass") {
+          drawImg(grassUrl,mapArray[i][0],mapArray[i][1]);
+        }else if (type == "bricks") {
+          drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
+        }else if (type == "block") {
+          drawImg(blockUrl,mapArray[i][0],mapArray[i][1]);
+        }else if (type == "coin_block") {
+          drawAnimImg(qmarkUrl,4,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
+        }else if (type == "used_block") {
+          drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
+        }else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor) {
+          // If close enough, spawn a goomba
+          //iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]))
+          //console.log((mapArray[i][0] * blockSize)+" "+(totalHeight * scale_factor - mapArray[i][1] * blockSize))
+        }
+      }
+    }
+  }
+
+  // Draw all active iEntities
+  function drawIEntities() {
+
+    // Go through every entity
+    for (var i = 0; i < iEntities.length; i++) {
+
+      //Find entity info
+      var entity = iEntities[i];
+      var type = entity.type;
+
+      // Draw the image with the right texture, and animated if should be
+      if (type == "goomba") {
+        drawAnimImg(goombaImg,2,.4,entity.x,entity.y,0,.38);
+      }else if (type == "test") {
+        drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
       }
     }
   }
@@ -263,6 +342,7 @@
   function update() {
     clearScreen();
     drawMap();
+    drawIEntities();
     player1.apply_forces();
     player1.checkCollision();
     player1.update_position();
