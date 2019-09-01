@@ -1,407 +1,448 @@
-<meta charset="UTF-8">
-<script src="https://koda.nu/simple.js">
+<body>
+  <meta charset="UTF-8">
+  <script src="https://koda.nu/simple.js">
 
-  /*
-    Made by add33m with (a bunch of) help from pelp3!
-    **pelp3Ngine 2.0**
-    Player size, block size, amount of blocks in the y axis of the screen and more can be changed by adjusting the right variables.
-  */
+    /*
+      Made by add33m with (a bunch of) help from pelp3!
+      **pelp3Ngine 2.0**
+      Player size, block size, amount of blocks in the y axis of the screen and more can be changed by adjusting the right variables.
+    */
 
-  // Map 
-  var mapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[5,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
-  const blockSize = 32;
-  
-  // Scaling (12 blocks tall)
-  const scale_factor = blockSize * 12 / totalHeight;
-  scale(1 / scale_factor,1 / scale_factor);
+    // Map 
+    var mapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[5,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"]];
+    const blockSize = 32;
 
-  // Canvas moving
-  var canvasPos = 0;
-  
-  // ASSETS:
-  // Define and preload texttures
-  const bricksUrl = new Image();
-  bricksUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
-  const blockUrl = new Image();
-  blockUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
-  const grassUrl = new Image();
-  grassUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
-  const qmarkUrl = new Image();
-  qmarkUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617123384593088516/block-193.gif";
-  const qmarkUsedUrl = new Image();
-  qmarkUsedUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617130212869799993/block-192.gif";
-  const mario1Url = "https://cdn.discordapp.com/attachments/489085929726935041/617048861416095750/mario1.png";
-  const playerSpriteSheet = new Image();
-  playerSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617423264729530398/SMBPlayerSprites.png";
-  const playerSpriteSheetReversed = new Image();
-  playerSpriteSheetReversed.src = "https://cdn.discordapp.com/attachments/489085929726935041/617447866985611300/SMBPlayerSpritesReversed.png";
-  const enemySpriteSheet = new Image();
-  enemySpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617422851909222440/SMBEnemySprites.png";
-  const goombaImg = new Image();
-  goombaImg.src = "https://cdn.discordapp.com/attachments/489085929726935041/617343550597890049/goomba.png";
+    const scale_factor = blockSize * 12 / totalHeight;
 
-  // Sounds
-  const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
-  const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
-  const coinUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617145664618496016/smb_coin.wav";
-
-  // Preload sounds
-  preloadSound(deathUrl);
-  preloadSound(jumpUrl);
-  preloadSound(coinUrl);
-
-  // Global variables
-  const activation_threshold = 5;
-
-  var context = document.getElementById("canvas").getContext("2d");
-  context.imageSmoothingEnabled = false;
-  updatesPerSecond = 30;
-
-  var iEntities = []
-
-  class Entity {
-    constructor(respawnX, respawnY, classType) {
-      // Set up variables and constants of the entity and Entity class
-      this.respawnX = respawnX;
-      this.respawnY = respawnY;
-      this.x = this.respawnX * blockSize;
-      this.y = totalHeight * scale_factor - this.respawnY * blockSize;
-      this.xv = 0;
-      this.yv = 0;
-      this.touching_ground = false;
-      this.debug = false;
-      this.width = blockSize;
-      this.height = blockSize;
-      this.classType = classType;
-      this.vis_state = 0;
-      this.gravity = 1.9;
-    }
+    var done = false;
+    var player1;
     
-    // Function that checks if any block is within range to collide
-    checkCollision() {
+    // Canvas moving
+    var canvasPos = 0;
+    
+    // ASSETS:
+    // Define and preload texttures
+    const bricksUrl = new Image();
+    bricksUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
+    const blockUrl = new Image();
+    blockUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
+    const grassUrl = new Image();
+    grassUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
+    const qmarkUrl = new Image();
+    qmarkUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617123384593088516/block-193.gif";
+    const qmarkUsedUrl = new Image();
+    qmarkUsedUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617130212869799993/block-192.gif";
+    const playerSpriteSheet = new Image();
+    playerSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617650288408395776/SMBPlayerSprites.png";
+    const playerSpriteSheetReversed = new Image();
+    playerSpriteSheetReversed.src = "https://cdn.discordapp.com/attachments/489085929726935041/617651006263656451/SMBPlayerSpritesReversed.png";
+    const enemySpriteSheet = new Image();
+    enemySpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617422851909222440/SMBEnemySprites.png";
+
+    // Sounds
+    const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
+    const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
+    const coinUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617145664618496016/smb_coin.wav";
+
+    // Preload sounds
+    preloadSound(deathUrl);
+    preloadSound(jumpUrl);
+    preloadSound(coinUrl);
+
+    // Global variables
+    const activation_threshold = 5;
+
+    var context = document.getElementById("canvas").getContext("2d");
+    context.imageSmoothingEnabled = false;
+    updatesPerSecond = 30;
+
+    var iEntities = []
+
+    class Entity {
+      constructor(respawnX, respawnY, classType) {
+        // Set up variables and constants of the entity and Entity class
+        this.respawnX = respawnX;
+        this.respawnY = respawnY;
+        this.x = this.respawnX * blockSize;
+        this.y = totalHeight * scale_factor - this.respawnY * blockSize;
+        this.xv = 0;
+        this.yv = 0;
+        this.touching_ground = false;
+        this.debug = false;
+        this.width = blockSize;
+        this.height = blockSize;
+        this.classType = classType;
+        this.vis_state = 0;
+        this.gravity = 1.9;
+      }
       
-      // Call off the collision detection if not alive
-      if (this.state < 1) {return null}
-      
-      // Set char to be in the air so if it isn't on the ground he can't air jump
-      this.touching_ground = false;
+      // Function that checks if any block is within range to collide
+      checkCollision() {
+        
+        // Call off the collision detection if not alive
+        if (this.state < 1) {return null}
+        
+        // Set char to be in the air so if it isn't on the ground he can't air jump
+        this.touching_ground = false;
 
-      // For every block
-      for (var i = 0; i < mapArray.length; i++) {
-        // Find delta between middle of player and middle of block
-        var dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
-        var dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
+        // For every block
+        for (var i = 0; i < mapArray.length; i++) {
+          // Find delta between middle of player and middle of block
+          var dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
+          var dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
 
-        // If in range
-        if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2)
-        {
-          // Perform collision, passing through this as ent
-          var ent = this;
-          this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize, 
-            // Action function, will activate when a block is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
-            action: function(vel,side) {
+          // If in range
+          if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2)
+          {
+            // Perform collision, passing through this as ent
+            var ent = this;
+            this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize, 
+              // Action function, will activate when a block is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
+              action: function(vel,side) {
 
-              // If entity is a player
-              if (ent.classType == "player") {
-                // Play coin sound when hitting a coin block from the bottom
-                if (side == 3 && mapArray[i][2] == "coin_block" && abs(vel) > activation_threshold) {
-                  // Change to a used block so that the texture changes and the block can't be used again, then play the coin sound a bit later
-                  mapArray[i][2] = "used_block";
-                  window.setTimeout(function(){playSound(coinUrl,.4)},200)
-                }
+                // If entity is a player
+                if (ent.classType == "player") {
+                  // Play coin sound when hitting a coin block from the bottom
+                  if (side == 3 && mapArray[i][2] == "coin_block" && abs(vel) > activation_threshold) {
+                    // Change to a used block so that the texture changes and the block can't be used again, then play the coin sound a bit later
+                    mapArray[i][2] = "used_block";
+                    window.setTimeout(function(){playSound(coinUrl,.4)},200)
+                  }
 
-                // **TEMPORARY**, if hitting a goomba from any side but the top, kill the player
-                if (side != 2 && mapArray[i][2] == "goomba" && ent.state > 0) {
-                  ent.state -= 1
-                }
+                  // **TEMPORARY**, if hitting a goomba from any side but the top, kill the player
+                  if (side != 2 && mapArray[i][2] == "goomba" && ent.state > 0) {
+                    ent.state -= 1
+                  }
 
-                if (side == 0 || side == 1 || abs(ent.xv) < 1) {
-                  ent.vis_state = ent.facing;
+                  if (side == 0 || side == 1 || abs(ent.xv) < 1) {
+                    ent.vis_state = ent.facing;
+                  }
                 }
               }
+            });
+          }
+        }
+      }
+
+      collide(object) {
+        // Calculate distance to object for this and next tick
+        var dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
+        var dyv = abs((this.y + this.yv + this.height/2) - (object.y + object.height/2));
+        var dx = abs((this.x + this.width/2) - (object.x + object.width/2));
+        var dy = abs((this.y + this.height/2) - (object.y + object.height/2));
+
+        // Debug line indicating what blocks are being calculated for collision
+        if (this.debug) {
+          line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2, "black");
+        }
+
+        // Check if entity will be inside object next tick
+        if (dyv < this.height/2 + object.height/2 && dxv < this.width/2 + object.width/2) {
+          
+          // Check if the entity is entering in the x axis
+          if (dx * (this.height / 2 + object.height / 2) > dy * (this.width / 2 + object.width / 2) && dy < this.height/2 + object.height/2) {
+
+            // Change the velocity so the entity intersects the border of the block next tick 
+            if (this.x - object.x > 0) {
+              // From the left
+              object.action(this.xv,0)
+
+              this.xv = -(dx - this.width/2 - object.width/2);
+            } else {
+              // From the right
+              object.action(this.xv,1)
+
+              this.xv = dx - this.width/2 - object.width/2;
             }
-          });
-        }
-      }
-    }
-
-    collide(object) {
-      // Calculate distance to object for this and next tick
-      var dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
-      var dyv = abs((this.y + this.yv + this.height/2) - (object.y + object.height/2));
-      var dx = abs((this.x + this.width/2) - (object.x + object.width/2));
-      var dy = abs((this.y + this.height/2) - (object.y + object.height/2));
-
-      // Debug line indicating what blocks are being calculated for collision
-      if (this.debug) {
-        line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2, "black");
-      }
-
-      // Check if entity will be inside object next tick
-      if (dyv < this.height/2 + object.height/2 && dxv < this.width/2 + object.width/2) {
-        
-        // Check if the entity is entering in the x axis
-        if (dx * (this.height / 2 + object.height / 2) > dy * (this.width / 2 + object.width / 2) && dy < this.height/2 + object.height/2) {
-
-          // Change the velocity so the entity intersects the border of the block next tick 
-          if (this.x - object.x > 0) {
-            // From the left
-            object.action(this.xv,0)
-
-            this.xv = -(dx - this.width/2 - object.width/2);
-          } else {
-            // From the right
-            object.action(this.xv,1)
-
-            this.xv = dx - this.width/2 - object.width/2;
           }
-        }
-        // Check if the entity is entering in the y axis
-        if (dx * (this.height / 2 +object.height / 2) < dy * (this.width / 2 + object.width / 2) && dx < this.width/2 + object.width / 2) {
+          // Check if the entity is entering in the y axis
+          if (dx * (this.height / 2 +object.height / 2) < dy * (this.width / 2 + object.width / 2) && dx < this.width/2 + object.width / 2) {
 
-          // Change the velocity so the entity intersects the border of the block next tick 
-          if (this.y - object.y < 0) {
-            // From the top
-            object.action(this.yv,2)
+            // Change the velocity so the entity intersects the border of the block next tick 
+            if (this.y - object.y < 0) {
+              // From the top
+              object.action(this.yv,2)
 
-            this.yv = dy - this.height/2 - object.height/2;
-            this.touching_ground = true;   
+              this.yv = dy - this.height/2 - object.height/2;
+              this.touching_ground = true;   
 
-            
+              
 
-            //if (this.classType == "player" && abs(this.xv) < 2) {
-            //  this.vis_state = this.facing;
-            //}
-          } else {
-            // From the bottom
-            object.action(this.yv,3)
+              //if (this.classType == "player" && abs(this.xv) < 2) {
+              //  this.vis_state = this.facing;
+              //}
+            } else {
+              // From the bottom
+              object.action(this.yv,3)
 
-            this.yv = -(dy - this.height/2 - object.height/2);
+              this.yv = -(dy - this.height/2 - object.height/2);
+            }
           }
         }
       }
-    }
 
-    // Apply player velocity to player position
-    update_position() {
-      this.x += this.xv;
-      this.y += this.yv;
-    }
-  }
-  
-  // Player subclass of Entity. Contains all functions related to interaction
-  class Player extends Entity {
-    constructor(respawnX,respawnY) {
-      super(respawnX,respawnY,"player");
-      this.touching_ground = false;
-      this.state = 1;
-      this.friction = 1.4;
-      this.jumped = false;
-      this.facing = 0;
+      // Apply player velocity to player position
+      update_position() {
+        this.x += this.xv;
+        this.y += this.yv;
+      }
     }
     
-    // Apply gravity and input forces to entity velocity, and check for death
-    apply_forces() {
+    // Player subclass of Entity. Contains all functions related to interaction
+    class Player extends Entity {
+      constructor(respawnX,respawnY,playerModel) {
+        super(respawnX,respawnY,"player");
+        this.touching_ground = false;
+        this.state = 1;
+        this.friction = 1.4;
+        this.jumped = false;
+        this.facing = 0;
+        this.playerModel = playerModel;
+      }
+      
+      // Apply gravity and input forces to entity velocity, and check for death
+      apply_forces() {
 
-      // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
-        if (this.yv < 0 && keyboard["w"]) {
-          this.yv += this.gravity / 2;
+        // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
+          if (this.yv < 0 && keyboard["w"]) {
+            this.yv += this.gravity / 2;
+          } else {
+            this.yv += this.gravity
+          }
+
+        // If below y=0 and not already dead, kill the player and respawn
+        if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
+
+        // If player state is no longer above 0, perform death animation
+        if (this.state == 0) {this.kill()}
+
+        // Add sidewards movement and friction if no sideways key is being held down
+        if (keyboard["d"] && this.state > 0) {
+          // Left
+          this.xv = 6;
+          this.facing = 0;        
+        } else if (keyboard["a"] && this.state > 0) {
+          // Right
+          this.xv = -6;
+          this.facing = 1;
         } else {
-          this.yv += this.gravity
+          // Slow down movement using friction
+          if (abs(this.xv) < .5) {
+            this.xv = 0
+            if (this.state > 0) {this.vis_state = this.facing}
+          }
+          this.xv = this.xv / this.friction
         }
 
-      // If below y=0 and not already dead, kill the player and respawn
-      if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
-
-      // If player state is no longer above 0, perform death animation
-      if (this.state == 0) {this.kill()}
-
-      // Add sidewards movement and friction if no sideways key is being held down
-      if (keyboard["d"] && this.state > 0) {
-        // Left
-        this.xv = 6;
-        this.facing = 0;        
-      } else if (keyboard["a"] && this.state > 0) {
-        // Right
-        this.xv = -6;
-        this.facing = 1;
-      } else {
-        // Slow down movement using friction
-        if (abs(this.xv) < .5) {
-          this.xv = 0
-          if (this.state > 0) {this.vis_state = this.facing}
+        if (this.state > 0) {
+          if (this.touching_ground) {
+            this.vis_state = this.facing + 2;
+          } else {
+            this.vis_state = this.facing + 4;
+          }
         }
-        this.xv = this.xv / this.friction
+
+        // Jump
+        if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
+          this.yv = -16;
+          playSound(jumpUrl, .4);
+          // Prevent jumping again if not released jump key and landed
+          this.jumped = true
+        } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
       }
 
-      if (this.state > 0) {
-        if (this.touching_ground) {
-          this.vis_state = this.facing + 2;
-        } else {
-          this.vis_state = this.facing + 4;
+      // Kills player
+      kill() {
+        // Play death sound and do death animation
+        playSound(deathUrl);
+        this.vis_state = -1
+        this.state = -1;
+        this.yv = -15;
+        this.xv = 10;
+        this.gravity = 1.3;
+        this.friction = 1.2;
+
+        // Respawn after the sound/animation is done
+        var player = this;
+          window.setTimeout(function() {
+            // Pass through 'this' as 'player' so context isn't lost
+            player.respawn(player)
+          }, 3200);
+      }
+
+      // Respawns player
+      respawn(player) {
+        // Set state to alive
+        player.state = 1;
+        player.vis_state = 0;
+
+        // Reset positions to current starting position
+        player.x = player.respawnX * blockSize;
+        player.y = totalHeight * scale_factor - player.respawnY * blockSize
+        player.xv = 0;
+        player.yv = 0;
+        player.gravity = 1.9;
+        player.friction = 1.4;
+      }
+
+      // Draw the player
+      draw() {
+        // Draw player texture depending on player state
+        if (this.debug) {
+          rectangle(this.x,this.y,blockSize,blockSize,"green");
+          text(this.x,this.y,blockSize,this.vis_state,"black");
+        }
+
+        var playerModelOffset;
+        if (this.playerModel == 0) {
+          playerModelOffset = 0;
+        } else if (this.playerModel == 1) {
+          playerModelOffset = 148;
+        } else if (this.playerModel == 2) {
+          playerModelOffset = 295;
+        }
+
+        if (this.vis_state == -1) {
+          drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,255,1 + playerModelOffset,16,16,32,32);
+        } else if (this.vis_state == 0) {
+          drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,0,1 + playerModelOffset,16,16,32,32);
+        } else if (this.vis_state == 1) {
+          drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-0,1 + playerModelOffset,-16,16,32,32,-1);
+        } else if (this.vis_state == 2) {
+          drawAnimImg(playerSpriteSheet,3,1,this.x,this.y,34,1 + playerModelOffset,16,16,32,32);
+        } else if (this.vis_state == 3) {
+          drawAnimImg(playerSpriteSheetReversed,3,1,this.x,this.y,597-34,1 + playerModelOffset,-16,16,32,32,-1);
+        } else if (this.vis_state == 4) {
+          drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,102,1 + playerModelOffset,16,16,32,32);
+        } else if (this.vis_state == 5) {
+          drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-102,1 + playerModelOffset,-16,16,32,32,-1);
         }
       }
-
-      // Jump
-      if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
-        this.yv = -16;
-        playSound(jumpUrl, .4);
-        // Prevent jumping again if not released jump key and landed
-        this.jumped = true
-      } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
     }
 
-    // Kills player
-    kill() {
-      // Play death sound and do death animation
-      playSound(deathUrl);
-      this.vis_state = -1
-      this.state = -1;
-      this.yv = -15;
-      this.xv = 10;
-      this.gravity = 1.3;
-      this.friction = 1.2;
-
-      // Respawn after the sound/animation is done
-      var player = this;
-        window.setTimeout(function() {
-          // Pass through 'this' as 'player' so context isn't lost
-          player.respawn(player)
-        }, 3200);
-    }
-
-    // Respawns player
-    respawn(player) {
-      // Set state to alive
-      player.state = 1;
-      player.vis_state = 0;
-
-      // Reset positions to current starting position
-      player.x = player.respawnX * blockSize;
-      player.y = totalHeight * scale_factor - player.respawnY * blockSize
-      player.xv = 0;
-      player.yv = 0;
-      player.gravity = 1.9;
-      player.friction = 1.4;
-    }
-
-    // Draw the player
-    draw() {
-      // Draw player texture depending on player state
-      if (this.debug) {
-        rectangle(this.x,this.y,blockSize,blockSize,"green");
-        text(this.x,this.y,blockSize,this.vis_state,"black");
+    class IEntity extends Entity {
+      constructor(type,respawnX,respawnY) {
+        super(respawnX,respawnY,"iEntity");
+        this.type = type;
+        this.ai = false;
       }
-      console.log(this.vis_state)
-      if (this.vis_state == -1) {
-        drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,255,1,16,16,32,32);
-      } else if (this.vis_state == 0) {
-        drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,0,1,16,16,32,32);
-      } else if (this.vis_state == 1) {
-        drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-0,1,-16,16,32,32,-1);
-      } else if (this.vis_state == 2) {
-        drawAnimImg(playerSpriteSheet,3,1,this.x,this.y,34,1,16,16,32,32);
-      } else if (this.vis_state == 3) {
-        drawAnimImg(playerSpriteSheetReversed,3,1,this.x,this.y,597-34,1,-16,16,32,32,-1);
-      } else if (this.vis_state == 4) {
-        drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,102,1,16,16,32,32);
-      } else if (this.vis_state == 5) {
-        drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-102,1,-16,16,32,32,-1);
+
+    }
+    
+    // Draw a non-animated image
+    function drawImg(image,x,y) {
+      context.drawImage(image,0,0,blockSize,blockSize,x * blockSize,totalHeight * scale_factor - y * blockSize,blockSize,blockSize)
+    }
+
+    // Draw an animated image. Frames must be stacked on top of each other (top = first frame) and equal in size
+    function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize,xoffset=1,yoffset=0) { // Speed should never exceed 2, or it will skip frames
+      // Find the frame based on the time, by rounding it down and then dividing it, taking the remainder as the frame
+      // 0 = start position of animation, s = size of the animation frame, offset = the offset per frame, f = final drawn resolution
+      frame = Math.floor(performance.now() * speed / 100) % totalFrames
+      context.drawImage(image,xoffset * (frame + 1) + x0 + frame * xs,yoffset * (frame + 1) + y0,xs,ys,x,y,xf,yf)
+    }
+
+    iEntities.push(new IEntity("goomba",5,2));
+
+    // Draw out the map
+    function drawMap() {
+
+      // Draw background
+      rectangle(canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
+
+      // Find middle point on screen
+      var screen_mid = canvasPos + totalWidth * scale_factor / 2
+
+      // Go through every block
+      for (var i = 0; i < mapArray.length; i++) {
+        // Find block type
+        var type = mapArray[i][2]
+
+        // Draw if not an invisible block
+        if (type != "inv") {
+
+          // Draw the image with the right texture, and animated if should be
+          if (type == "grass") {
+            drawImg(grassUrl,mapArray[i][0],mapArray[i][1]);
+          }else if (type == "bricks") {
+            drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
+          }else if (type == "block") {
+            drawImg(blockUrl,mapArray[i][0],mapArray[i][1]);
+          }else if (type == "coin_block") {
+            drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
+          }else if (type == "used_block") {
+            drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
+          }else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor) {
+            // If close enough, spawn a goomba
+            //iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]))
+          }
+        }
       }
     }
-  }
 
-  class IEntity extends Entity {
-    constructor(type,respawnX,respawnY) {
-      super(respawnX,respawnY,"iEntity");
-      this.type = type;
-      this.ai = false;
-    }
+    // Draw all active iEntities
+    function drawIEntities() {
 
-  }
+      // Go through every entity
+      for (var i = 0; i < iEntities.length; i++) {
 
-  // Create player
-  let player1 = new Player(0,2);
-  
-  // Draw a non-animated image
-  function drawImg(image,x,y) {
-    context.drawImage(image,0,0,blockSize,blockSize,x * blockSize,totalHeight * scale_factor - y * blockSize,blockSize,blockSize)
-  }
-
-  // Draw an animated image. Frames must be stacked on top of each other (top = first frame) and equal in size
-  function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize,xoffset=1,yoffset=0) { // Speed should never exceed 2, or it will skip frames
-    // Find the frame based on the time, by rounding it down and then dividing it, taking the remainder as the frame
-    // 0 = start position of animation, s = size of the animation frame, offset = the offset per frame, f = final drawn resolution
-    frame = Math.floor(performance.now() * speed / 100) % totalFrames
-    context.drawImage(image,xoffset * (frame + 1) + x0 + frame * xs,yoffset * (frame + 1) + y0,xs,ys,x,y,xf,yf)
-  }
-
-  iEntities.push(new IEntity("goomba",5,2));
-
-  // Draw out the map
-  function drawMap() {
-
-    // Draw background
-    rectangle(canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
-
-    // Find middle point on screen
-    var screen_mid = canvasPos + totalWidth * scale_factor / 2
-
-  	// Go through every block
-    for (var i = 0; i < mapArray.length; i++) {
-      // Find block type
-      var type = mapArray[i][2]
-
-      // Draw if not an invisible block
-      if (type != "inv") {
+        //Find entity info
+        var entity = iEntities[i];
+        var type = entity.type;
 
         // Draw the image with the right texture, and animated if should be
-        if (type == "grass") {
-          drawImg(grassUrl,mapArray[i][0],mapArray[i][1]);
-        }else if (type == "bricks") {
+        if (type == "goomba") {
+          drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
+        }else if (type == "test") {
           drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
-        }else if (type == "block") {
-          drawImg(blockUrl,mapArray[i][0],mapArray[i][1]);
-        }else if (type == "coin_block") {
-          drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
-        }else if (type == "used_block") {
-          drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
-        }else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor) {
-          // If close enough, spawn a goomba
-          //iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]))
         }
       }
     }
-  }
+    
+    // Scaling (12 blocks tall)
+    scale(1 / scale_factor,1 / scale_factor);
 
-  // Draw all active iEntities
-  function drawIEntities() {
+    // Every game update, perform a tick and render
+    function update() {
+      clearScreen();
+      if (done) {
+        drawMap();
+        drawIEntities();
+        player1.apply_forces();
+        player1.checkCollision();
+        player1.update_position();
+        player1.draw();
+      } else {
+        // Draw character selection screen
+        var mario_x = (totalWidth / 2 - 400)*scale_factor;
+        var luigi_x = (totalWidth / 2 - 100)*scale_factor;
+        var toad_x = (totalWidth / 2 + 200)*scale_factor;
+        var char_y = (totalHeight / 2)*scale_factor;
+        rectangle(0,0,totalWidth,totalHeight,"yellow")
+        text((totalWidth / 2 - 500)*scale_factor,(totalHeight / 2 - 100)*scale_factor,30,"Pick a character!","black")
+        drawAnimImg(playerSpriteSheet,3,.4,mario_x,char_y,34,1,16,16,64,64);
+        drawAnimImg(playerSpriteSheet,3,.4,luigi_x,char_y,34,1 + 148,16,16,64,64);
+        drawAnimImg(playerSpriteSheet,3,.4,toad_x,char_y,34,1 + 295,16,16,64,64);
 
-    // Go through every entity
-    for (var i = 0; i < iEntities.length; i++) {
-
-      //Find entity info
-      var entity = iEntities[i];
-      var type = entity.type;
-
-      // Draw the image with the right texture, and animated if should be
-      if (type == "goomba") {
-        drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
-      }else if (type == "test") {
-        drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
+        // See if any player is being clicked on and create that player
+        var dx_mario = abs(mouse.x*scale_factor - mario_x - 32)
+        var dx_luigi = abs(mouse.x*scale_factor - luigi_x - 32)
+        var dx_toad = abs(mouse.x*scale_factor - toad_x - 32)
+        var dy = abs(mouse.y*scale_factor - char_y - 32);
+        if (dy < 32 && mouse.left) {
+          if (dx_mario < 32) {
+            done = true;
+            player1 = new Player(0,2,0);
+          } else if (dx_luigi < 32) {
+            done = true;
+            player1 = new Player(0,2,1);
+          } else if (dx_toad < 32) {
+            done = true;
+            player1 = new Player(0,2,2);
+          }
+        }
       }
     }
-  }
-  
-  // Every game update, perform a tick and render
-  function update() {
-    clearScreen();
-    drawMap();
-    drawIEntities();
-    player1.apply_forces();
-    player1.checkCollision();
-    player1.update_position();
-    player1.draw();
-  }
-  
-</script>
+    
+  </script>
+</body>
