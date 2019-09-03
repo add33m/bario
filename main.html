@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <body>
   <meta charset="UTF-8">
   <script src="https://koda.nu/simple.js">
@@ -9,22 +10,22 @@
     */
 
     // Map 
-    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[8,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[7,2,"block"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"]];
+    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[8,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[7,2,"block"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"]];
     const blockSize = 32;
     const resetMapOnRespawn = true;
 
-    var mapArray = savedMapArray;
+    let mapArray = savedMapArray;
 
     // Scaling (12 blocks tall)
     const scale_factor = blockSize * 12 / totalHeight;
     scale(1 / scale_factor,1 / scale_factor);
 
     // Character selection
-    var done = false;
-    var player1;
+    let done = false;
+    let player1;
     
     // Canvas moving
-    var canvasPos = 0;
+    let canvasPos = 0;
     
     // ASSETS:
     // Define and preload textures
@@ -44,6 +45,8 @@
     playerSpriteSheetReversed.src = "https://cdn.discordapp.com/attachments/489085929726935041/617651006263656451/SMBPlayerSpritesReversed.png";
     const enemySpriteSheet = new Image();
     enemySpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617817625778454537/SMBEnemySprites.png";
+    const objectSpriteSheet = new Image();
+    objectSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/618484986642825217/SMBObjectSprites.png";
 
     // Sounds
     const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
@@ -60,11 +63,11 @@
     // Global variables
     const activation_threshold = 5;
 
-    var context = document.getElementById("canvas").getContext("2d");
+    let context = document.getElementById("canvas").getContext("2d");
     context.imageSmoothingEnabled = false;
     updatesPerSecond = 30;
 
-    var iEntities = []
+    let iEntities = []
 
     class Entity {
       constructor(respawnX, respawnY, classType) {
@@ -95,16 +98,33 @@
         this.touching_ground = false;
 
         // For every block
-        for (var i = 0; i < mapArray.length; i++) {
+        for (let i = 0; i < mapArray.length; i++) {
           // Find delta between middle of player and middle of block
-          var dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
-          var dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
-
+          let dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
+          let dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
+          
           // If in range
-          if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2) {
+          if (dy < this.height/2 + blockSize*9 && dx < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole") {
+
+            let x = mapArray[i][0]*blockSize;
+            let y = totalHeight * scale_factor - mapArray[i][1]*blockSize;
+            let width = blockSize;
+            let height = blockSize;
+
+            // The flagpole doesn't have the conventional size
+            if (mapArray[i][2] == "flagpole") {
+              width = 8;
+              height = 304;
+              x += 12;
+              y -= 272;
+            }
+
+            if (this.debug) {
+              rectangle(x,y,width,height,"red")
+            }
 
             // Action function, will activate when a block is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
-            var ent = this;
+            let ent = this;
             function collisionAction(vel,side) {
 
               // If entity is a player
@@ -130,19 +150,19 @@
             }
 
             // Perform collision detection
-            this.collide({x: mapArray[i][0]*blockSize, y: totalHeight * scale_factor - mapArray[i][1]*blockSize, width: blockSize, height: blockSize, action: collisionAction, name: mapArray[i][2], type: "block"});
+            this.collide({x: x, y: y, width: width, height: height, action: collisionAction, name: mapArray[i][2], type: "block"});
           }
         }
         // For every iEntity
-        for (var i = 0; i < iEntities.length; i++) {
+        for (let i = 0; i < iEntities.length; i++) {
           
           //Find entity info
-          var entity = iEntities[i];
-          var dx = abs(this.x + this.width / 2 - entity.x + entity.width / 2);
-          var dy = abs(this.y + this.height / 2 - entity.y + entity.height / 2);
+          let entity = iEntities[i];
+          let dx = abs(this.x + this.width / 2 - entity.x + entity.width / 2);
+          let dy = abs(this.y + this.height / 2 - entity.y + entity.height / 2);
 
           // Action function, will activate when a block or player is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
-          var ent = this;
+          let ent = this;
           function collisionAction(vel,side) {
 
             // If entity is a player
@@ -186,10 +206,10 @@
         if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0) {return null}
 
         // Calculate distance to object for this and next tick
-        var dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
-        var dyv = abs((this.y + this.yv + this.height/2) - (object.y + object.height/2));
-        var dx = abs((this.x + this.width/2) - (object.x + object.width/2));
-        var dy = abs((this.y + this.height/2) - (object.y + object.height/2));
+        let dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
+        let dyv = abs((this.y + this.yv + this.height/2) - (object.y + object.height/2));
+        let dx = abs((this.x + this.width/2) - (object.x + object.width/2));
+        let dy = abs((this.y + this.height/2) - (object.y + object.height/2));
 
         // Debug line indicating what blocks are being calculated for collision
         if (this.debug) {
@@ -316,7 +336,7 @@
         this.friction = 1.2;
 
         // Respawn after the sound/animation is done
-        var player = this;
+        let player = this;
           window.setTimeout(function() {
             // Pass through 'this' as 'player' so context isn't lost
             player.respawn(player)
@@ -339,7 +359,7 @@
 
         // Reset the map if option is enabled
         if (resetMapOnRespawn) {
-          for (var i = 0; i < savedMapArray; i++) {
+          for (let i = 0; i < savedMapArray; i++) {
             mapArray[i] = savedMapArray[i];
           }
           iEntities.splice(0,iEntities.length)
@@ -354,7 +374,7 @@
           text(this.x,this.y,blockSize,this.vis_state,"black");
         }
 
-        var playerModelOffset;
+        let playerModelOffset;
         if (this.playerModel == 0) {
           playerModelOffset = 0;
         } else if (this.playerModel == 1) {
@@ -412,7 +432,7 @@
         this.yv += this.gravity
 
         if (this.y > totalHeight * scale_factor) {
-          var index = iEntities.indexOf(this);
+          let index = iEntities.indexOf(this);
           iEntities.splice(index,1);
         }
       }
@@ -452,12 +472,12 @@
       rectangle(canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
 
       // Find middle point on screen
-      var screen_mid = canvasPos + totalWidth * scale_factor / 2
+      let screen_mid = canvasPos + totalWidth * scale_factor / 2
 
       // Go through every block
-      for (var i = 0; i < mapArray.length; i++) {
+      for (let i = 0; i < mapArray.length; i++) {
         // Find block type
-        var type = mapArray[i][2]
+        let type = mapArray[i][2]
 
         // Draw if not an invisible block
         if (type != "inv") {
@@ -469,6 +489,8 @@
             drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
           }else if (type == "block") {
             drawImg(blockUrl,mapArray[i][0],mapArray[i][1]);
+          }else if (type == "flagpole") {
+            drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
           }else if (type == "coin_block") {
             drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
           }else if (type == "used_block") {
@@ -486,10 +508,10 @@
     function updateIEntities() {
 
       // Go through every entity
-      for (var i = 0; i < iEntities.length; i++) {
+      for (let i = 0; i < iEntities.length; i++) {
 
         //Find entity info
-        var entity = iEntities[i];
+        let entity = iEntities[i];
         
         // Update entity
         entity.apply_forces();
@@ -502,11 +524,11 @@
     function drawIEntities() {
 
       // Go through every entity
-      for (var i = 0; i < iEntities.length; i++) {
+      for (let i = 0; i < iEntities.length; i++) {
 
         //Find entity info
-        var entity = iEntities[i];
-        var type = entity.type;
+        let entity = iEntities[i];
+        let type = entity.type;
 
         // Draw the image with the right texture, and animated if should be
         if (type == "goomba") {
@@ -537,10 +559,10 @@
         player1.draw(); 
       } else {
         // Draw character selection screen
-        var mario_x = (totalWidth / 2 - 400)*scale_factor;
-        var luigi_x = (totalWidth / 2 - 100)*scale_factor;
-        var toad_x = (totalWidth / 2 + 200)*scale_factor;
-        var char_y = (totalHeight / 2)*scale_factor;
+        let mario_x = (totalWidth / 2 - 400)*scale_factor;
+        let luigi_x = (totalWidth / 2 - 100)*scale_factor;
+        let toad_x = (totalWidth / 2 + 200)*scale_factor;
+        let char_y = (totalHeight / 2)*scale_factor;
         rectangle(0,0,totalWidth,totalHeight,"yellow")
         text((totalWidth / 2 - 500)*scale_factor,(totalHeight / 2 - 100)*scale_factor,30,"Pick a character!","black")
         drawAnimImg(playerSpriteSheet,3,.4,mario_x,char_y,34,1,16,16,64,64);
@@ -548,10 +570,10 @@
         drawAnimImg(playerSpriteSheet,3,.4,toad_x,char_y,34,1 + 295,16,16,64,64);
 
         // See if any player is being clicked on and create that player
-        var dx_mario = abs(mouse.x*scale_factor - mario_x - 32)
-        var dx_luigi = abs(mouse.x*scale_factor - luigi_x - 32)
-        var dx_toad = abs(mouse.x*scale_factor - toad_x - 32)
-        var dy = abs(mouse.y*scale_factor - char_y - 32);
+        let dx_mario = abs(mouse.x*scale_factor - mario_x - 32)
+        let dx_luigi = abs(mouse.x*scale_factor - luigi_x - 32)
+        let dx_toad = abs(mouse.x*scale_factor - toad_x - 32)
+        let dy = abs(mouse.y*scale_factor - char_y - 32);
         if (dy < 32 && mouse.left) {
           if (dx_mario < 32) {
             done = true;
