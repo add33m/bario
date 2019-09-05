@@ -53,12 +53,14 @@
     const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
     const coinUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617145664618496016/smb_coin.wav";
     const stompUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617815051428036608/smb_stomp.wav";
+    const winUrl = "";
 
     // Preload sounds
     preloadSound(deathUrl);
     preloadSound(jumpUrl);
     preloadSound(coinUrl);
     preloadSound(stompUrl);
+    preloadSound(winUrl);
 
     // Global variables
     const activation_threshold = 5;
@@ -104,7 +106,7 @@
           let dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
           
           // If in range
-          if (dy < this.height/2 + blockSize*9 && dx < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole") {
+          if (dy < this.height/2 + blockSize*9 && dx < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole" && this.state < 5) {
 
             let x = mapArray[i][0]*blockSize;
             let y = totalHeight * scale_factor - mapArray[i][1]*blockSize;
@@ -138,6 +140,22 @@
 
                 if ((side == 0 || side == 1 || abs(ent.xv) < 1) && abs(ent.yv) <= ent.gravity) {
                   ent.vis_state = ent.facing;
+                }
+
+                // If hit flagpole, start going down it
+                if (mapArray[i][2] == "flagpole") {
+                  ent.state = 5;
+                  ent.yv = 3;
+                }
+
+                if (ent.state == 5 && ent.yv < 3) {
+                  this.state = 6;
+                  playSound(winUrl);
+                  
+                  console.log("reached bottom")
+                  this.yv = -13.5;
+                  this.xv = -5;
+                  console.log(this.yv +" "+ this.xv)
                 }
 
               // If entity is an iEntity
@@ -277,51 +295,54 @@
       apply_forces() {
 
         // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
-          if (this.yv < 0 && keyboard["w"] && this.state > 0) {
+        if (this.yv < 0 && keyboard["w"] && this.state > 0 && this.state != 5) {
             this.yv += this.gravity / 2.4;
-          } else {
+          } else if(this.state != 5) {
             this.yv += this.gravity
-          }
-
-        // If below y=0 and not already dead, kill the player and respawn
-        if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
-
-        // If player state is no longer above 0, perform death animation
-        if (this.state == 0) {this.kill()}
-
-        // Add sidewards movement and friction if no sideways key is being held down
-        if (keyboard["d"] && this.state > 0) {
-          // Left
-          this.xv = 6;
-          this.facing = 0;        
-        } else if (keyboard["a"] && this.state > 0) {
-          // Right
-          this.xv = -6;
-          this.facing = 1;
-        } else {
-          // Slow down movement using friction
-          if (abs(this.xv) < .5) {
-            this.xv = 0
-            if (this.state > 0) {this.vis_state = this.facing}
-          }
-          this.xv = this.xv / this.friction
         }
+        
+        // Disable input if touching flag
+        if (this.state < 5) {
+          // If below y=0 and not already dead, kill the player and respawn
+          if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
 
-        if (this.state > 0) {
-          if (this.touching_ground) {
-            this.vis_state = this.facing + 2;
+          // If player state is no longer above 0, perform death animation
+          if (this.state == 0) {this.kill()}
+
+          // Add sidewards movement and friction if no sideways key is being held down
+          if (keyboard["d"] && this.state > 0) {
+            // Left
+            this.xv = 6;
+            this.facing = 0;        
+          } else if (keyboard["a"] && this.state > 0) {
+            // Right
+            this.xv = -6;
+            this.facing = 1;
           } else {
-            this.vis_state = this.facing + 4;
+            // Slow down movement using friction
+            if (abs(this.xv) < .5) {
+              this.xv = 0
+              if (this.state > 0) {this.vis_state = this.facing}
+            }
+            this.xv = this.xv / this.friction
           }
-        }
 
-        // Jump
-        if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
-          this.yv = -13.5;
-          playSound(jumpUrl, .4);
-          // Prevent jumping again if not released jump key and landed
-          this.jumped = true
-        } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
+          if (this.state > 0) {
+            if (this.touching_ground) {
+              this.vis_state = this.facing + 2;
+            } else {
+              this.vis_state = this.facing + 4;
+            }
+          }
+
+          // Jump
+          if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
+            this.yv = -13.5;
+            playSound(jumpUrl, .4);
+            // Prevent jumping again if not released jump key and landed
+            this.jumped = true
+          } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
+        }
       }
 
       // Kills player
