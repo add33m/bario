@@ -10,7 +10,7 @@
     */
 
     // Map 
-    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[8,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[7,2,"block"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"]];
+    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[8,2,"goomba"],[6,1,"bricks"],[7,1,"bricks"],[7,2,"block"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,2,"inv"]];
     const blockSize = 32;
     const resetMapOnRespawn = true;
 
@@ -23,6 +23,14 @@
     // Character selection
     let done = false;
     let player1;
+
+    // Clears console to prevent memory usage and lag
+    let clearCons = false
+    if (clearCons) {
+      window.setInterval(function(){
+        console.clear()
+      },10000)
+    }
     
     // Canvas moving
     let canvasPos = 0;
@@ -53,7 +61,7 @@
     const jumpUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616353716068548697/smb_jumpsmall.wav";
     const coinUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617145664618496016/smb_coin.wav";
     const stompUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617815051428036608/smb_stomp.wav";
-    const winUrl = "";
+    const winUrl = "https://cdn.discordapp.com/attachments/489085929726935041/619212400532652068/smb_win.mp3";
 
     // Preload sounds
     preloadSound(deathUrl);
@@ -145,17 +153,10 @@
                 // If hit flagpole, start going down it
                 if (mapArray[i][2] == "flagpole") {
                   ent.state = 5;
-                  ent.yv = 3;
-                }
-
-                if (ent.state == 5 && ent.yv < 3) {
-                  this.state = 6;
-                  playSound(winUrl);
-                  
-                  console.log("reached bottom")
-                  this.yv = -13.5;
-                  this.xv = -5;
-                  console.log(this.yv +" "+ this.xv)
+                  window.setTimeout(function(){
+                    ent.yv = 3;
+                    ent.xv = 0;
+                  },10)
                 }
 
               // If entity is an iEntity
@@ -221,7 +222,7 @@
 
       collide(object) {
         // Call off collision if object isn't a valid collision block
-        if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0) {return null}
+        if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0 || object.name == "flagpole" && this.state >= 5) {return null}
 
         // Calculate distance to object for this and next tick
         let dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
@@ -262,7 +263,22 @@
               object.action(this.yv,2)
 
               this.yv = dy - this.height/2 - object.height/2;
-              this.touching_ground = true;   
+              this.touching_ground = true;
+
+              // If player has slid down the flagpole
+              if (abs(this.yv) < 5 && this.state == 5) {
+                this.xv = 0;
+                this.yv = 0;
+                this.state = 6;
+                this.yv = -13.5;
+                  this.xv = 3;
+                window.setTimeout(function(){
+                  console.log("btuh")
+                  
+                },0)
+                
+              }
+              
             } else {
               // From the bottom
               object.action(this.yv,3)
@@ -578,6 +594,9 @@
         // Render map and objects
         drawIEntities();
         player1.draw(); 
+
+        if (player1.debug) {console.log(player1.yv +" "+ player1.xv)}
+        
       } else {
         // Draw character selection screen
         let mario_x = (totalWidth / 2 - 400)*scale_factor;
