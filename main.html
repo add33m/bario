@@ -21,7 +21,7 @@
     scale(1 / scale_factor,1 / scale_factor);
 
     // Character selection
-    let done = false;
+    let gameState = 0;
     let player1;
 
     // Clears console to prevent memory usage and lag
@@ -110,11 +110,11 @@
         // For every block
         for (let i = 0; i < mapArray.length; i++) {
           // Find delta between middle of player and middle of block
-          let dx = abs(this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2));
-          let dy = abs(this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2));
+          let dx = this.x + this.width / 2 - (mapArray[i][0] * blockSize + blockSize / 2);
+          let dy = this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2);
           
           // If in range
-          if (dy < this.height/2 + blockSize*9 && dx < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole" && this.state < 5) {
+          if (abs(dy) < this.height/2 + blockSize*9 && abs(dx) < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole" && this.state < 5) {
 
             let x = mapArray[i][0]*blockSize;
             let y = totalHeight * scale_factor - mapArray[i][1]*blockSize;
@@ -127,6 +127,16 @@
               height = 304;
               x += 12;
               y -= 272;
+
+              if (gameState == 2 && dy < 3) {
+                this.y += 3
+              } else if (gameState == 2) {
+                window.setTimeout(function(){
+                  this.state = 6;
+                  this.xv = 5;
+                  this.yv = -13.5;
+                },500)
+              }
             }
 
             if (this.debug) {
@@ -153,10 +163,13 @@
                 // If hit flagpole, start going down it
                 if (mapArray[i][2] == "flagpole") {
                   ent.state = 5;
+                  ent.yv = 0;
+                  ent.xv = 0;
+                  ent.x = mapArray[i][0] * blockSize
+
                   window.setTimeout(function(){
-                    ent.yv = 3;
-                    ent.xv = 0;
-                  },10)
+                    gameState = 2;
+                  },500)
                 }
 
               // If entity is an iEntity
@@ -266,6 +279,7 @@
               this.touching_ground = true;
 
               // If player has slid down the flagpole
+              /*
               if (abs(this.yv) < 5 && this.state == 5) {
                 this.xv = 0;
                 this.yv = 0;
@@ -277,7 +291,7 @@
                   
                 },0)
                 
-              }
+              }*/
               
             } else {
               // From the bottom
@@ -316,6 +330,15 @@
           } else if(this.state != 5) {
             this.yv += this.gravity
         }
+        // Slow down movement using friction
+        if (abs(this.xv) < .5) {
+          this.xv = 0
+          if (this.state > 0) {this.vis_state = this.facing}
+        }
+        if (this.state < 6) {
+          this.xv = this.xv / this.friction
+        }
+            
         
         // Disable input if touching flag
         if (this.state < 5) {
@@ -334,13 +357,6 @@
             // Right
             this.xv = -6;
             this.facing = 1;
-          } else {
-            // Slow down movement using friction
-            if (abs(this.xv) < .5) {
-              this.xv = 0
-              if (this.state > 0) {this.vis_state = this.facing}
-            }
-            this.xv = this.xv / this.friction
           }
 
           if (this.state > 0) {
@@ -582,7 +598,7 @@
     function update() {
       clearScreen();
 
-      if (done) {
+      if (gameState > 0) {
         drawMap();
 
         // Perform collision checks and apply physics
@@ -616,13 +632,13 @@
         let dy = abs(mouse.y*scale_factor - char_y - 32);
         if (dy < 32 && mouse.left) {
           if (dx_mario < 32) {
-            done = true;
+            gameState = 1;
             player1 = new Player(0,2,0);
           } else if (dx_luigi < 32) {
-            done = true;
+            gameState = 1;
             player1 = new Player(0,2,1);
           } else if (dx_toad < 32) {
-            done = true;
+            gameState = 1;
             player1 = new Player(0,2,2);
           }
         }
