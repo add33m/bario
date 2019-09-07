@@ -22,6 +22,14 @@
 
     // Character selection
     let gameState = 0;
+    let flagpolePosX, flagPos = blockSize * 9;
+
+    for (let i = 0; i < mapArray.length; i++) {
+      if (mapArray[i][2] == "flagpole") {
+        flagpolePosX = mapArray[i][0] * blockSize;
+      }
+    }
+
     let player1;
 
     // Clears console to prevent memory usage and lag
@@ -114,7 +122,7 @@
           let dy = this.y + this.height / 2 - (totalHeight * scale_factor - mapArray[i][1] * blockSize + blockSize / 2);
           
           // If in range
-          if (abs(dy) < this.height/2 + blockSize*9 && abs(dx) < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole" && this.state < 5) {
+          if (abs(dy) < this.height/2 + blockSize*2 && abs(dx) < this.width/2 + blockSize*2 || this.classType == "player" && mapArray[i][2] == "flagpole") {
 
             let x = mapArray[i][0]*blockSize;
             let y = totalHeight * scale_factor - mapArray[i][1]*blockSize;
@@ -128,19 +136,19 @@
               x += 12;
               y -= 272;
 
-              if (gameState == 2 && dy < 3) {
-                this.y += 3
-              } else if (gameState == 2) {
-                window.setTimeout(function(){
-                  this.state = 6;
-                  this.xv = 5;
-                  this.yv = -13.5;
-                },500)
+              // If in a state to slide down the flagpole, move down a notch
+              if (gameState == 2 && abs(dy) > 3 && this.classType == "player") {
+                this.y += 3;
+                this.x = mapArray[i][0] * blockSize - 16;
+              // If at the bottom of the flagpole, jump off
+              } else if (gameState == 2 && this.state < 6 && this.classType == "player") {
+                gameState = 3;
+                this.state = 6;
               }
             }
 
             if (this.debug) {
-              rectangle(x,y,width,height,"red")
+              rectangle(x,y,width,height,"red");
             }
 
             // Action function, will activate when a block is hit. Will give back the velocity that the side was hit with as well as the side as 0-3
@@ -161,11 +169,12 @@
                 }
 
                 // If hit flagpole, start going down it
-                if (mapArray[i][2] == "flagpole") {
+                if (mapArray[i][2] == "flagpole" && ent.state < 5) {
                   ent.state = 5;
                   ent.yv = 0;
                   ent.xv = 0;
-                  ent.x = mapArray[i][0] * blockSize
+                  ent.x = mapArray[i][0] * blockSize - 16
+                  ent.vis_state = 7;
 
                   window.setTimeout(function(){
                     gameState = 2;
@@ -277,21 +286,6 @@
 
               this.yv = dy - this.height/2 - object.height/2;
               this.touching_ground = true;
-
-              // If player has slid down the flagpole
-              /*
-              if (abs(this.yv) < 5 && this.state == 5) {
-                this.xv = 0;
-                this.yv = 0;
-                this.state = 6;
-                this.yv = -13.5;
-                  this.xv = 3;
-                window.setTimeout(function(){
-                  console.log("btuh")
-                  
-                },0)
-                
-              }*/
               
             } else {
               // From the bottom
@@ -335,8 +329,15 @@
           this.xv = 0
           if (this.state > 0) {this.vis_state = this.facing}
         }
-        if (this.state < 6) {
-          this.xv = this.xv / this.friction
+
+        this.xv = this.xv / this.friction;
+
+        if (this.state > 0) {
+          if (this.touching_ground) {
+            this.vis_state = this.facing + 2;
+          } else {
+            this.vis_state = this.facing + 4;
+          }
         }
             
         
@@ -357,14 +358,6 @@
             // Right
             this.xv = -6;
             this.facing = 1;
-          }
-
-          if (this.state > 0) {
-            if (this.touching_ground) {
-              this.vis_state = this.facing + 2;
-            } else {
-              this.vis_state = this.facing + 4;
-            }
           }
 
           // Jump
@@ -450,6 +443,8 @@
           drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,102,1 + playerModelOffset,16,16,32,32);
         } else if (this.vis_state == 5) {
           drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-102,1 + playerModelOffset,-16,16,32,32,-1);
+        } else if (this.vis_state == 7) {
+          drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,221,1 + playerModelOffset,16,16,32,32);
         }
       }
     }
@@ -604,6 +599,30 @@
         // Perform collision checks and apply physics
         player1.apply_forces();
         player1.checkCollision();
+
+        // If sitting on the pole
+        if (player1.state == 5) {
+          player1.vis_state = 7;
+          player1.x = flagpolePosX - 16;
+        } else if (player1.state == 6) {
+          player1.vis_state = 7;
+        }
+
+        // If has reached the bottom of the flagpole, play win sound and jump off it
+        if (player1.state == 6) {
+          player1.state = 7;
+          playSound(winUrl);
+          player1.xv = 7;
+          player1.yv = -15;
+          player1.friction = 1.15;
+
+          window.setTimeout(function(){
+            player1.friction = 1;
+            player1.xv = 3;
+            player1.vis_state = 2;
+          },1000)
+        }
+
         player1.update_position();
         updateIEntities();
         
