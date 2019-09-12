@@ -87,7 +87,8 @@
     // Global variables
     const activation_threshold = 5;
 
-    let context = document.getElementById("canvas").getContext("2d");
+    let canvas = document.getElementById("canvas");
+    let context = canvas.getContext("2d");
     context.imageSmoothingEnabled = false;
     updatesPerSecond = 30;
 
@@ -116,7 +117,7 @@
       checkCollision() {
         
         // Call off the collision detection if not alive
-        if (this.state < 1) {return null}
+        if (this.state < 1 && this.state > -2) {return null}
         
         // Set char to be in the air so if it isn't on the ground he can't air jump
         this.touching_ground = false;
@@ -144,7 +145,7 @@
 
               // If in a state to slide down the flagpole, move down a notch
               if (gameState == 2 && abs(dy) > 3 && this.classType == "player") {
-                this.y += 3;
+                this.y += 6;
                 this.x = mapArray[i][0] * blockSize - 16;
               // If at the bottom of the flagpole and flag is done moving, jump off
               } else if (gameState == 2 && this.state < 6 && this.classType == "player" && flagPos <= 0) {
@@ -170,7 +171,10 @@
                   mapArray[i][2] = "used_block";
                   window.setTimeout(function(){
                     playSound(coinUrl,.4);
-                    iEntities.push(new IEntity("mushroom",mapArray[i][0],mapArray[i][1]+1))
+                    let mushroom = new IEntity("mushroom",mapArray[i][0],mapArray[i][1]+1)
+                    iEntities.push(mushroom);
+                    mushroom.ai = true;
+                    mushroom.facing = 1;
                   },200)
                 }
 
@@ -202,6 +206,7 @@
             this.collide({x: x, y: y, width: width, height: height, action: collisionAction, name: mapArray[i][2], type: "block"});
           }
         }
+
         // For every iEntity
         for (let i = 0; i < iEntities.length; i++) {
           
@@ -216,9 +221,17 @@
 
             // If entity is a player
             if (ent.classType == "player") {
-              // If hitting a goomba from any side but the top, damage/kill the player
-              if (side != 2 && entity.type == "goomba" && ent.state > 0) {
-                ent.state -= 1
+              // If hitting a goomba from any side but the top, damage/kill the player and make it invincible for a while
+              if (side != 2 && entity.type == "goomba" && ent.state > 1) {
+                let lastState = ent.state;
+                ent.state = -2;
+                ent.vis_state -= 10;
+                window.setTimeout(function(){ent.state = lastState - 1},3000);
+
+              } else if (side != 2 && entity.type == "goomba" && ent.state == 1) {
+                // Kill the player if small
+                ent.state = 0;
+
               } else if (side == 2 && entity.type == "goomba" && ent.state > 0) {
                 // Stomp the goomba
                 entity.kill(i);
@@ -228,6 +241,13 @@
                   if (keyboard["w"]) {ent.yv = -13.5}
                   else {ent.yv = -8}
                 },10)
+              }
+
+              if (ent.state < 2 && entity.type == "mushroom") {
+                entity.kill(i);
+                ent.state += 1;
+                activatePhysics = false;
+                window.setTimeout(function(){activatePhysics = true},600);
               }
 
               if ((side == 0 || side == 1 || abs(ent.xv) < 1) && abs(ent.yv) <= ent.gravity) {
@@ -253,6 +273,9 @@
       collide(object) {
         // Call off collision if object isn't a valid collision block
         if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0 || object.name == "flagpole" && this.state >= 5) {return null}
+
+        // Call off collision if trying to collide the player with a goomba
+        if (this.classType == "player" && this.state < -1 && object.name == "goomba") {return null}
 
         // Calculate distance to object for this and next tick
         let dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
@@ -332,7 +355,7 @@
       apply_forces() {
 
         // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
-        if (this.yv < 0 && keyboard["w"] && this.state > 0 && this.state != 5) {
+        if (this.yv < 0 && keyboard["w"] && (this.state > 0 || this.state < -1) && this.state != 5) {
             this.yv += this.gravity / 2.4;
           } else if(this.state != 5) {
             this.yv += this.gravity
@@ -359,22 +382,22 @@
           // If below y=0 and not already dead, kill the player and respawn
           if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
 
-          // If player state is no longer above 0, perform death animation
+          // If player is no longer alive, perform death procedure
           if (this.state == 0) {this.kill()}
 
           // Add sidewards movement and friction if no sideways key is being held down
-          if (keyboard["d"] && this.state > 0) {
+          if (keyboard["d"] && (this.state > 0 || this.state < -1)) {
             // Left
             this.xv = 6;
             this.facing = 0;        
-          } else if (keyboard["a"] && this.state > 0) {
+          } else if (keyboard["a"] && (this.state > 0 || this.state < -1)) {
             // Right
             this.xv = -6;
             this.facing = 1;
           }
 
           // Jump
-          if (keyboard["w"] && this.touching_ground && this.state > 0 && ! this.jumped) {
+          if (keyboard["w"] && this.touching_ground && (this.state > 0 || this.state < -1) && ! this.jumped) {
             this.yv = -13.5;
             playSound(jumpUrl, .4);
             // Prevent jumping again if not released jump key and landed
@@ -613,6 +636,9 @@
     function update() {
       clearScreen();
 
+      totalWidth = window.innerWidth;
+      totalHeight = window.innerHeight;
+
       if (gameState > 0) {
         drawMap();
 
@@ -638,7 +664,7 @@
           }
         }
 
-        // If has reached the bottom of the flagpole, play win sound and jump off it
+        // If has reached the bottom of the flagpole, play win sound and jump off it. Reload page after a while
         if (player1.state == 6 && gameState == 3) {
           activatePhysics = true;
           player1.state = 7;
@@ -654,6 +680,8 @@
             player1.xv = 3;
             player1.vis_state = 2;
           },1000)
+
+          window.setTimeout(function(){location.reload(false)},6000)
         }
 
         if (activatePhysics) {
@@ -666,15 +694,15 @@
         player1.draw(); 
 
         if (player1.debug) {console.log(player1.yv +" "+ player1.xv)}
-        
+      
       } else {
         // Draw character selection screen
         let mario_x = (totalWidth / 2 - 400)*scale_factor;
         let luigi_x = (totalWidth / 2 - 100)*scale_factor;
         let toad_x = (totalWidth / 2 + 200)*scale_factor;
         let char_y = (totalHeight / 2)*scale_factor;
-        rectangle(0,0,totalWidth,totalHeight,"yellow")
-        text((totalWidth / 2 - 500)*scale_factor,(totalHeight / 2 - 100)*scale_factor,30,"Pick a character!","black")
+        rectangle(0,0,totalWidth * scale_factor,totalHeight * scale_factor,"yellow");
+        text(totalWidth * scale_factor / 2 - totalWidth * scale_factor / 2.8,(totalHeight / 2 - 100)*scale_factor,totalWidth * scale_factor / 20,"Pick a character!","black")
         drawAnimImg(playerSpriteSheet,3,.4,mario_x,char_y,34,1,16,16,64,64);
         drawAnimImg(playerSpriteSheet,3,.4,luigi_x,char_y,34,1 + 148,16,16,64,64);
         drawAnimImg(playerSpriteSheet,3,.4,toad_x,char_y,34,1 + 295,16,16,64,64);
