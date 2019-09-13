@@ -9,7 +9,7 @@
     */
 
     // Map 
-    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[9,2,"goomba"],[7,6,"block"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,2,"inv"]];
+    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[9,2,"goomba"],[7,6,"block"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,2,"inv"]];
     const blockSize = 32;
     const resetMapOnRespawn = false;
 
@@ -148,9 +148,9 @@
                 this.y += 6;
                 this.x = mapArray[i][0] * blockSize - 16;
               // If at the bottom of the flagpole and flag is done moving, jump off
-              } else if (gameState == 2 && this.state < 6 && this.classType == "player" && flagPos <= 0) {
+              } else if (gameState == 2 && this.state < 10 && this.classType == "player" && flagPos <= 0) {
                 gameState = 3;
-                this.state = 6;
+                this.state += 5;
                 flagPos = 0;
               }
             }
@@ -181,11 +181,12 @@
                 // If hit flagpole, start going down it
                 if (mapArray[i][2] == "flagpole" && ent.state < 5) {
                   activatePhysics = false;
-                  ent.state = 5;
+                  ent.state += 5;
                   ent.yv = 0;
                   ent.xv = 0;
                   ent.x = mapArray[i][0] * blockSize - 16
-                  ent.vis_state = 7;
+                  // The previous state -1
+                  ent.vis_state = (ent.state-6) * 10 + 7;
 
                   window.setTimeout(function(){
                     playSound(flagpoleUrl);
@@ -276,10 +277,10 @@
 
       collide(object) {
         // Call off collision if object isn't a valid collision block
-        if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0 || object.name == "flagpole" && this.state >= 5) {return null}
+        if (object.type == "block" && object.name == "goomba" || object.name == "goomba" && object.ref && object.ref.vis_state < 0 || object.name == "flagpole" && gameState >= 2) {return null}
 
-        // Call off collision if trying to collide the player with a goomba
-        if (this.classType == "player" && this.state < -1 && object.name == "goomba") {return null}
+        // Call off collision if trying to collide the invincible player or mushroom with a goomba
+        if (this.classType == "player" && this.state < -1 && object.name == "goomba" || this.classType == "iEntity" && (this.type == "mushroom" && object.name == "goomba" || this.type == "goomba" && object.name == "mushroom")) {return null}
 
         // Calculate distance to object for this and next tick
         let dxv = abs((this.x + this.xv + this.width/2) - (object.x + object.width/2));
@@ -382,7 +383,7 @@
             
         
         // Disable input if touching flag
-        if (this.state < 5) {
+        if (gameState < 2) {
           // If below y=0 and not already dead, kill the player and respawn
           if (this.y > totalHeight * scale_factor && this.state > 0) {this.kill()}
 
@@ -671,11 +672,11 @@
         player1.checkCollision();
 
         // If sitting on the pole
-        if (player1.state == 5) {
-          player1.vis_state = 7;
+        if (player1.state >= 5) {
+          player1.vis_state = (player1.state-6) * 10 + 7;
           player1.x = flagpolePosX - 16;
-        } else if (player1.state == 6) {
-          player1.vis_state = 7;
+        } else if (player1.state >= 10) {
+          player1.vis_state = (player1.state-6) * 10 + 7;
         }
 
         // Move down flag
@@ -687,9 +688,10 @@
         }
 
         // If has reached the bottom of the flagpole, play win sound and jump off it. Reload page after a while
-        if (player1.state == 6 && gameState == 3) {
+        if (player1.state >= 10 && gameState == 3) {
           activatePhysics = true;
-          player1.state = 7;
+          player1.state -= 10;
+          gameState = 4;
           playSound(winUrl);
           player1.xv = 7;
           player1.yv = -15;
@@ -700,7 +702,7 @@
           window.setTimeout(function(){
             player1.friction = 1;
             player1.xv = 3;
-            player1.vis_state = 2;
+            player1.vis_state = (player1.state-1) * 10 + 2;
           },1000)
 
           window.setTimeout(function(){location.reload(false)},6000)
