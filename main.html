@@ -572,8 +572,17 @@
     function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize,xoffset=1,yoffset=0) { // Speed should never exceed 2, or it will skip frames
       // Find the frame based on the time, by rounding it down and then dividing it, taking the remainder as the frame
       // 0 = start position of animation, s = size of the animation frame, offset = the offset per frame, f = final drawn resolution
-      frame = Math.floor(performance.now() * speed / 100) % totalFrames
+      let frame = Math.floor(performance.now() * speed / 100) % totalFrames;
       context.drawImage(image,xoffset * (frame + 1) + x0 + frame * xs,yoffset * (frame + 1) + y0,xs,ys,x,y,xf,yf)
+    }
+
+    // Draws a transition image, like drawAnimImg but flips between two images instead of two frames. Array: [image,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize]
+    function drawTransAnim(imageArray=[],speed) {
+      let totalFrames = imageArray.length;
+      let frame = Math.floor(performance.now() * speed / 100) % totalFrames;
+      let currImage = imageArray[frame];
+
+      context.drawImage(currImage[0],xoffset * (frame + 1) + currImage[3] + frame * currImage[5],yoffset * (frame + 1) + currImage[4],currImage[5],currImage[6],currImage[1],currImage[2],currImage[7],currImage[8])
     }
 
     // Draw out the map
