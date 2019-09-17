@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<body>
+<head>
   <meta charset="UTF-8">
+  <title>Bario by add33m</title>
+  <link rel="icon" href="barioicon.ico">
+</head>
+
+<body>
   <script src="simple.js">
 
     /*
@@ -76,6 +81,7 @@
     const stompUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617815051428036608/smb_stomp.wav";
     const winUrl = "https://cdn.discordapp.com/attachments/489085929726935041/619212400532652068/smb_win.mp3";
     const flagpoleUrl = "https://cdn.discordapp.com/attachments/489085929726935041/619967226564313088/smb_flagpole.wav";
+    const musicUrl = "http://www.mariomayhem.com/downloads/sound_tracks/Super_Mario_Bros._1/01-main-theme-overworld.mp3";
 
     // Preload sounds
     preloadSound(deathUrl);
@@ -84,6 +90,7 @@
     preloadSound(stompUrl);
     preloadSound(winUrl);
     preloadSound(flagpoleUrl);
+    preloadSound(musicUrl);
 
     // Global variables
     const activation_threshold = 5;
@@ -191,6 +198,8 @@
                   ent.yv = 0;
                   ent.xv = 0;
                   ent.x = mapArray[i][0] * blockSize - 16
+                  // Stop playing music
+                  stopSound(musicUrl);
                   // The previous state -1
                   ent.vis_state = (ent.state-6) * 10 + 7;
 
@@ -371,7 +380,7 @@
             this.yv += this.gravity
         }
         // Limit falling velocity
-        if (this.yv > 12) {this.yv = 12}
+        if (this.yv > 14) {this.yv = 14}
 
         // Remove velocity if too small so that there is no super small floats
         if (abs(this.xv) < .3) {
@@ -403,12 +412,14 @@
           // Add sidewards movement and friction if no sideways key is being held down
           if (keyboard["d"] && (this.state > 0 || this.state < -1)) {
             // Left
-            this.xv = 6;
-            this.facing = 0;        
+            this.xv += 1.5;
+            this.facing = 0;  
+            if (this.xv > 5) {this.xv = 5}      
           } else if (keyboard["a"] && (this.state > 0 || this.state < -1)) {
             // Right
-            this.xv = -6;
+            this.xv -= 1.5;
             this.facing = 1;
+            if (this.xv < -5) {this.xv = -5} 
           }
 
           // Jump
@@ -775,12 +786,15 @@
           if (dx_mario < 32) {
             gameState = 1;
             player1 = new Player(0,2,0);
+            loopSound(musicUrl,.3);
           } else if (dx_luigi < 32) {
             gameState = 1;
             player1 = new Player(0,2,1);
+            loopSound(musicUrl,.3);
           } else if (dx_toad < 32) {
             gameState = 1;
             player1 = new Player(0,2,2);
+            loopSound(musicUrl,.3);
           }
         }
       }
