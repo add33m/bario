@@ -21,7 +21,8 @@
 
     // Character selection
     let gameState = 0;
-    let flagpolePosX, flagPos = blockSize * 8;
+    let flagpolePosX;
+    let flagPos = blockSize * 8;
 
     for (let i = 0; i < mapArray.length; i++) {
       if (mapArray[i][2] == "flagpole") {
@@ -108,6 +109,7 @@
         this.width = blockSize;
         this.height = blockSize;
         this.classType = classType;
+        this.state = 1;
         this.vis_state = 0;
         this.facing = 0;
         this.gravity = 1.6;
@@ -272,8 +274,8 @@
             }
           }
 
-          // If in range
-          if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2) {
+          // If in range and iEntity is active
+          if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2 && entity.state > 0) {
             this.collide({x: entity.x, y: entity.y, width: entity.width, height: entity.height, action: collisionAction, name: entity.type, type: "iEntity", ref: entity});
           }
         }
@@ -354,7 +356,6 @@
       constructor(respawnX,respawnY,playerModel) {
         super(respawnX,respawnY,"player");
         this.touching_ground = false;
-        this.state = 1;
         this.friction = 1.4;
         this.jumped = false;
         this.playerModel = playerModel;
@@ -562,38 +563,24 @@
         this.yv += this.gravity
 
         if (this.y > totalHeight * scale_factor) {
-          let index = iEntities.indexOf(this);
-          iEntities.splice(index,1);
+          this.kill();
         }
       }
 
       kill() {
-
-        function findEnt(ent) {
-          for (let i=0; i<iEntities.length; i++) {
-            if (iEntities[i] === ent) {
-              return i
-            }
-          }
-        }
-        let n = findEnt(this);
-        
         if (this.type == "goomba") {
           this.vis_state = -1;
+          this.state = 0;
           playSound(stompUrl,.6);
-          console.log("squished "+n+" from "+iEntities)
-          // Remove goomba after squished texture has been showed
+          // Set goomba to unactive state after squished texture has been showed
+          let ent = this;
           window.setTimeout(function() {
-            while (n != findEnt(this)) {
-              n = findEnt(this);
-            }
-            iEntities.splice(n,1);
-          }, 200)
-        } else if (this.type == "mushroom") {
-          console.log("killed "+n+" from "+iEntities)
-          iEntities.splice(findEnt(this),1);
-        }
+            ent.state = -1;
+          }, 200);
 
+        } else if (this.type == "mushroom") {
+          this.state = -1;
+        }
       }
     }
     
@@ -668,10 +655,12 @@
         //Find entity info
         let entity = iEntities[i];
         
-        // Update entity
-        entity.apply_forces();
-        entity.checkCollision();
-        entity.update_position();
+        // Update entity if not inactive
+        if (entity.state > 0) {
+          entity.apply_forces();
+          entity.checkCollision();
+          entity.update_position();
+        }
       }
     }
 
@@ -685,11 +674,14 @@
         let entity = iEntities[i];
         let type = entity.type;
 
+        // Call off the drawing if iEntity is inactive
+        if (entity.state < 0) {return null}
+
         // Draw the image with the right texture, and animated if should be
         if (type == "goomba") {
           if (entity.vis_state == 0) {
             drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
-          } else {drawAnimImg(enemySpriteSheet,1,.4,entity.x,entity.y,97,1,16,17,32,34);}
+          } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
         } else if (type == "test") {
           drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
         } else if (type == "mushroom") {

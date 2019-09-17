@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <title>Bario builder by add33m</title>
   </head>
 
   <body>
@@ -38,9 +39,11 @@
       let mapArray = [];
       const blockSize = 32;
       let canvasPos = 0;
+      updatesPerSecond = 60;
 
       // What block is currently selected
       let selected = "block";
+      const blockTypes = ["block","bricks","flagpole"]
 
       // Scaling (20 blocks tall)
       const scale_factor = blockSize * 20 / totalHeight;
@@ -78,7 +81,7 @@
       function drawMap() {
 
         // Draw background
-        rectangle(canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
+        rectangle(-canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
 
         // Find middle point on screen
         let screen_mid = canvasPos + totalWidth * scale_factor / 2
@@ -88,13 +91,13 @@
         let screenBlockHeight = 22;
 
         // Draw vertical lines
-        for (let i = 0; i < screenBlockWidth; i++) {
+        for (let i = floor(-canvasPos / 32); i < screenBlockWidth + floor(-canvasPos / 32); i++) {
           line((i-1)*32,0,(i-1)*32,totalHeight * scale_factor,1,"grey");
         }
 
-        // Draw vertical lines
+        // Draw horizontal lines
         for (let i = 0; i < screenBlockHeight; i++) {
-          line(0,(i-1)*32,totalWidth * scale_factor,(i-1)*32,1,"grey");
+          line(-canvasPos,(i-1)*32,totalWidth * scale_factor-canvasPos,(i-1)*32,1,"grey");
         }
 
         // Go through every block
@@ -114,16 +117,24 @@
               drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,102,0,16,16,32,32,1,1);
             } else if (type == "flagpole") {
               drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
-              drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - flagPos,765,435,16,16,32,32);
+              drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - blockSize * 8,765,435,16,16,32,32);
             } else if (type == "coin_block") {
               drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
             } else if (type == "used_block") {
               drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
-            } else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor && ! mapArray[i][3]) {
-              // If close enough, spawn a goomba
-              iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]))
-              mapArray[i][3] = true;
+            } else if (type == "goomba") {
+              drawAnimImg(enemySpriteSheet,2,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,0,1,16,16,32,32);
             }
+          }
+        }
+      }
+
+      // Made to see if there is a block in the map that has the properties of the block sought after. Made for checking if to remove blocks
+      function lookForBlockInMap(x,y) {
+        for (let i=0; i<mapArray.length; i++) {
+          if (mapArray[i][0] == x && mapArray[i][1] == y) {
+            // Return i+1 so that the first block (index 0) won't count as non-existent
+            return i+1;
           }
         }
       }
@@ -134,26 +145,56 @@
         clearScreen();
 
         // Check for any keyboard input to see what block should be selected
+        if (keyboard.right && keyboard.shift) {
+          canvasPos -= 16;
+          translate(-16,0)
+        } else if (keyboard.right) {
+          canvasPos -= 8;
+          translate(-8,0)
+        } else if (keyboard.left && keyboard.shift) {
+          if (canvasPos < -8) {
+            canvasPos += 16;
+            translate(16,0);
+          } else if (canvasPos < 0) {
+            canvasPos += 8;
+            translate(8,0);
+          }
+        } else if (keyboard.left) {
+          if (canvasPos < 0) {
+            canvasPos += 8;
+            translate(8,0);
+          } 
+        } else if (keyboard.one) {
+          selected = "bricks";
+        } else if (keyboard.two) {
+          selected = "block";
+        } else if (keyboard.three) {
+          selected = "flagpole";
+        } else if (keyboard.four) {
+          selected = "goomba";
+        }
 
         // If clicking, check what block is clicked on
         if (mouse.left) {
-          let mouseXblock = floor(mouse.x * scale_factor / blockSize);
+          let mouseXblock = floor((mouse.x * scale_factor -canvasPos) / blockSize);
           let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
 
-          let block = [mouseXblock,mouseYblock,selected];
+          let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
 
-          if (!mapArray.includes(block)) {
-            mapArray.push(block);
+          if (! blockIndex) {
+            mapArray.push([mouseXblock,mouseYblock,selected]);
           }
+        
         // Removing blocks if right clicked on
         } else if (mouse.right) {
           let mouseXblock = floor(mouse.x * scale_factor / blockSize);
           let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
 
-          let block = [mouseXblock,mouseYblock,selected];
+          let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
 
-          if (mapArray.includes(block)) {
-            mapArray.splice(mapArray.indexOf(block),1);
+          if (blockIndex) {
+            // Counter the i+1
+            mapArray.splice(blockIndex-1,1);
           }
         }
 
