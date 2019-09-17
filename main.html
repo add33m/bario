@@ -9,7 +9,7 @@
     */
 
     // Map 
-    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[6,2,"goomba"],[9,2,"goomba"],[7,6,"block"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"],[9,1,"bricks"],[10,2,"block"],[11,3,"flagpole"],[11,2,"block"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,2,"inv"]];
+    const savedMapArray = [[-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"],[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[2,5,"coin_block"],[3,1,"bricks"],[4,1,"bricks"],[4,2,"block"],[5,1,"bricks"],[5,2,"goomba"],[6,2,"goomba"],[7,6,"block"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"],[9,1,"bricks"],[7,2,"block"],[11,3,"flagpole"],[11,2,"block"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,2,"inv"]];
     const blockSize = 32;
     const resetMapOnRespawn = false;
 
@@ -144,8 +144,12 @@
               y -= 272;
 
               // If in a state to slide down the flagpole, move down a notch
-              if (gameState == 2 && abs(dy) > 3 && this.classType == "player") {
-                this.y += 6;
+              let yAboveFlagBtm = this.y + this.height - (y + 272 + blockSize)
+
+              if (gameState == 2 && yAboveFlagBtm < 0 && this.classType == "player") {
+
+                if (abs(yAboveFlagBtm) > 6) {this.y += 6;}
+                else {this.y = y + 272}
                 this.x = mapArray[i][0] * blockSize - 16;
               // If at the bottom of the flagpole and flag is done moving, jump off
               } else if (gameState == 2 && this.state < 10 && this.classType == "player" && flagPos <= 0) {
@@ -225,12 +229,12 @@
               // If hitting a goomba from any side but the top, damage/kill the player and make it invincible for a while
               if (side != 2 && entity.type == "goomba" && ent.state > 1) {
                 let lastState = ent.state;
-                ent.state = -2;
-                ent.vis_state -= 10;
+                ent.state -= 5;
+                ent.y += 32;
+                ent.height = 32; 
+                ent.vis_state -= 50
                 window.setTimeout(function(){
-                  ent.state = lastState - 1;
-                  ent.y += 32;
-                  ent.height = 32;                  
+                  ent.state = lastState - 1;                 
                 },3000);
 
               } else if (side != 2 && entity.type == "goomba" && ent.state == 1) {
@@ -239,9 +243,9 @@
 
               } else if (side == 2 && entity.type == "goomba" && ent.state > 0) {
                 // Stomp the goomba
-                entity.kill(i);
+                entity.kill();
 
-                // Let player jump or bounce on goomba
+                // Let player jump or bounce on goomba (delayed so collision doesn't affect jump)
                 window.setTimeout(function(){
                   if (keyboard["w"]) {ent.yv = -13.5}
                   else {ent.yv = -8}
@@ -250,7 +254,7 @@
 
               // Give power up if touching a mushroom
               if (ent.state < 2 && entity.type == "mushroom") {
-                entity.kill(i);
+                entity.kill();
                 ent.state += 1;
                 ent.vis_state += 10;
                 ent.y -= 32;
@@ -365,14 +369,19 @@
           } else if(this.state != 5) {
             this.yv += this.gravity
         }
-        // Slow down movement using friction
-        if (abs(this.xv) < .5) {
+        // Limit falling velocity
+        if (this.yv > 12) {this.yv = 12}
+
+        // Remove velocity if too small so that there is no super small floats
+        if (abs(this.xv) < .3) {
           this.xv = 0
           if (this.state > 0) {this.vis_state = (this.state-1) * 10 + this.facing}
         }
 
+        // Slow down movement using "friction"
         this.xv = this.xv / this.friction;
 
+        // Set the right visual state depending on what state the player is in
         if (this.state > 0 || this.state < -1) {
           if (this.touching_ground) {
             this.vis_state = (this.state-1) * 10 + this.facing + 2;
@@ -507,7 +516,23 @@
           drawAnimImg(playerSpriteSheetReversed,1,1,this.x,this.y,597-102,35 + playerModelOffset,-16,32,32,64,-1);
         } else if (this.vis_state == 17) {
           drawAnimImg(playerSpriteSheet,1,1,this.x,this.y,221,35 + playerModelOffset,16,32,32,64);
-        }
+        } 
+        // Big Mario getting hurt // Array: [image,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize]
+          else if (this.vis_state == -40) {
+          drawTransAnim([[playerSpriteSheet,this.x,this.y,1,1 + playerModelOffset,16,16,32,32],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -39) {
+          drawTransAnim([[playerSpriteSheetReversed,this.x,this.y,597-0,1 + playerModelOffset,-16,16,32,32,-1],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -38) {
+          drawTransAnim([[playerSpriteSheet,this.x,this.y,34,1 + playerModelOffset,16,16,32,32],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -37) {
+          drawTransAnim([[playerSpriteSheetReversed,this.x,this.y,597-34,1 + playerModelOffset,-16,16,32,32,-1],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -36) {
+          drawTransAnim([[playerSpriteSheet,this.x,this.y,102,1 + playerModelOffset,16,16,32,32],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -35) {
+          drawTransAnim([[playerSpriteSheetReversed,this.x,this.y,597-102,1 + playerModelOffset,-16,16,32,32,-1],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } else if (this.vis_state == -33) {
+          drawTransAnim([[playerSpriteSheet,this.x,this.y,221,1 + playerModelOffset,16,16,32,32],[playerSpriteSheet,this.x,this.y,1000,1000,16,16,32,32]],.8);
+        } 
       }
     }
 
@@ -547,17 +572,31 @@
         }
       }
 
-      kill(n=iEntities.indexOf(this)) {
+      kill() {
+
+        function findEnt(ent) {
+          for (let i=0; i<iEntities.length; i++) {
+            if (iEntities[i] === ent) {
+              return i
+            }
+          }
+        }
+        let n = findEnt(this);
+        
         if (this.type == "goomba") {
           this.vis_state = -1;
           playSound(stompUrl,.6);
-          
+          console.log("squished "+n+" from "+iEntities)
           // Remove goomba after squished texture has been showed
-          window.setTimeout(function() {   
+          window.setTimeout(function() {
+            while (n != findEnt(this)) {
+              n = findEnt(this);
+            }
             iEntities.splice(n,1);
           }, 200)
         } else if (this.type == "mushroom") {
-          iEntities.splice(n,1);
+          console.log("killed "+n+" from "+iEntities)
+          iEntities.splice(findEnt(this),1);
         }
 
       }
@@ -569,7 +608,7 @@
     }
 
     // Draw an animated image. Frames are stacked next to each other (top = first frame) and equal in size
-    function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0,xs=blockSize,ys=blockSize,xf=blockSize,yf=blockSize,xoffset=1,yoffset=0) { // Speed should never exceed 2, or it will skip frames
+    function drawAnimImg(image,totalFrames,speed,x,y,x0=0,y0=0,xs=16,ys=16,xf=blockSize,yf=blockSize,xoffset=1,yoffset=0) { // Speed should never exceed 2, or it might skip frames
       // Find the frame based on the time, by rounding it down and then dividing it, taking the remainder as the frame
       // 0 = start position of animation, s = size of the animation frame, offset = the offset per frame, f = final drawn resolution
       let frame = Math.floor(performance.now() * speed / 100) % totalFrames;
@@ -582,7 +621,7 @@
       let frame = Math.floor(performance.now() * speed / 100) % totalFrames;
       let currImage = imageArray[frame];
 
-      context.drawImage(currImage[0],xoffset * (frame + 1) + currImage[3] + frame * currImage[5],yoffset * (frame + 1) + currImage[4],currImage[5],currImage[6],currImage[1],currImage[2],currImage[7],currImage[8])
+      context.drawImage(currImage[0],currImage[3],currImage[4],currImage[5],currImage[6],currImage[1],currImage[2],currImage[7],currImage[8])
     }
 
     // Draw out the map
@@ -597,7 +636,7 @@
       // Go through every block
       for (let i = 0; i < mapArray.length; i++) {
         // Find block type
-        let type = mapArray[i][2]
+        let type = mapArray[i][2];
 
         // Draw if not an invisible block
         if (type != "inv") {
@@ -613,12 +652,12 @@
             drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
             drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - flagPos,765,435,16,16,32,32);
           } else if (type == "coin_block") {
-            drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
+            drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,34,0,16,16,32,32,1,1);
           } else if (type == "used_block") {
-            drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
+            drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,85,0,16,16,32,32,1,1);
           } else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor && ! mapArray[i][3]) {
             // If close enough, spawn a goomba
-            iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]))
+            iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]));
             mapArray[i][3] = true;
           }
         }
