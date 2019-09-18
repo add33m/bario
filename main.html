@@ -406,20 +406,6 @@
           }
         }
             
-        // Sidescroll the canvas if the player is sufficiently far out to the screen
-        if (this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0) {
-          canvasPos -= this.xv;
-          translate(-this.xv,0);
-        } else if (this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
-          canvasPos -= this.xv;
-          translate(-this.xv,0);
-        }
-        // Make sure canvas doesn't scroll back too far
-        if (canvasPos > 0) {
-          translate(-canvasPos,0);
-          canvasPos = 0;
-        }
-
         // Disable input if touching flag
         if (gameState < 2) {
           // If below y=0 and not already dead, kill the player and respawn
@@ -449,6 +435,21 @@
             this.jumped = true
           } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
         }
+
+        // Sidescroll the canvas if the player is sufficiently far out to the screen
+        if (this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0) {
+          canvasPos -= this.xv;
+          translate(-this.xv,0);
+        } else if (this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
+          canvasPos -= this.xv;
+          translate(-this.xv,0);
+        }
+        // Make sure canvas doesn't scroll back too far
+        if (canvasPos > 0) {
+          translate(-canvasPos,0);
+          canvasPos = 0;
+        }
+
       }
 
       // Kills player
