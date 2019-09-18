@@ -22,6 +22,7 @@
     let savedMap = localStorage.getItem("currentBuiltMap");
     if (savedMap) {
       savedMapArray = JSON.parse(savedMap);
+      savedMapArray.unshift([-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"]);
     }
 
     let mapArray = JSON.parse(JSON.stringify(savedMapArray));
@@ -437,17 +438,22 @@
         }
 
         // Sidescroll the canvas if the player is sufficiently far out to the screen
-        if (this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0) {
+        if (this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPos + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
           canvasPos -= this.xv;
           translate(-this.xv,0);
         } else if (this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
           canvasPos -= this.xv;
           translate(-this.xv,0);
         }
-        // Make sure canvas doesn't scroll back too far
+        // Make sure canvas doesn't scroll too far in either direction
         if (canvasPos > 0) {
           translate(-canvasPos,0);
           canvasPos = 0;
+        } else if (-canvasPos + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7)) {
+          // Find how much too far it went
+          let diff = -canvasPos + (totalWidth * scale_factor) - (flagpolePosX + blockSize * 7);
+          translate(diff,0);
+          canvasPos += diff;
         }
 
       }
