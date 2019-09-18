@@ -42,9 +42,15 @@
       let canvasPos = 0;
       updatesPerSecond = 60;
 
+      // Look if a map is locally saved, and use that if so is the case
+      let savedMap = localStorage.getItem("currentBuiltMap");
+      if (savedMap) {
+        mapArray = JSON.parse(savedMap);
+      }
+
       // What block is currently selected
-      let selected = "block";
-      const blockTypes = ["block","bricks","flagpole"]
+      let selected = "bricks";
+      // Blocktypes: "bricks", "block", "flagpole", "goomba"
 
       // Scaling (20 blocks tall)
       const scale_factor = blockSize * 20 / totalHeight;
@@ -140,19 +146,35 @@
         }
       }
 
+      // If window is getting unloaded, save map progress
+      window.onbeforeunload = function(){
+        localStorage.setItem("currentBuiltMap",JSON.stringify(mapArray))
+      };
+
+      // If pressing N to reset the map
+      window.onkeypress = function(){
+        if (event.keyCode === 110) {
+          let response = prompt("Are you sure you want to clear the map? \n(Type 'yes' to proceed)");
+          if (response == "yes") {
+            mapArray = [];
+          }
+        }
+      };
+
       // On every frame/tick, check what block is currently selected, and if clicked on a block then place that into the map array
       function update() {
         // First clear the canvas from the previous frame
         clearScreen();
 
-        // Check for any keyboard input to see what block should be selected
+        // Move the canvas
         if (keyboard.right && keyboard.shift) {
           canvasPos -= 16;
           translate(-16,0)
         } else if (keyboard.right) {
           canvasPos -= 8;
           translate(-8,0)
-        } else if (keyboard.left && keyboard.shift) {
+        }
+        if (keyboard.left && keyboard.shift) {
           if (canvasPos < -8) {
             canvasPos += 16;
             translate(16,0);
@@ -165,7 +187,10 @@
             canvasPos += 8;
             translate(8,0);
           } 
-        } else if (keyboard.one) {
+        } 
+        
+        // Select the right block
+        if (keyboard.one) {
           selected = "bricks";
         } else if (keyboard.two) {
           selected = "block";
@@ -188,7 +213,7 @@
         
         // Removing blocks if right clicked on
         } else if (mouse.right) {
-          let mouseXblock = floor(mouse.x * scale_factor / blockSize);
+          let mouseXblock = floor((mouse.x * scale_factor -canvasPos) / blockSize);
           let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
@@ -197,6 +222,11 @@
             // Counter the i+1
             mapArray.splice(blockIndex-1,1);
           }
+        }
+
+        // See if hitting enter to try out the course
+        if (keyboard.enter) {
+          // b
         }
 
         // Finally draw the map
