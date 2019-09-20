@@ -48,6 +48,26 @@
         mapArray = JSON.parse(savedMap);
       }
 
+      // Look for the current state of the game across pages, if no state is saved, create a new array for turning into JSON later
+      let gameState = localStorage.getItem("currentGameState");
+      if (gameState) {
+        gameState = JSON.parse(gameState);
+      } else {
+        gameState = {
+          playingSavedMap: false,
+          validatingMap: false,
+          coursePlayed: false,
+        };
+      }
+
+      // Check if coming back from after validating a map, then reset the gamestate
+      if (gameState.playingSavedMap && gameState.validatingMap && gameState.coursePlayed) {
+        // Upload map
+      }
+      gameState.playingSavedMap = false;
+      gameState.validatingMap = false;
+      gameState.coursePlayed = false;
+
       // What block is currently selected
       let selected = "bricks";
       // Blocktypes: "bricks", "block", "flagpole", "goomba"
@@ -149,15 +169,23 @@
       // If window is getting unloaded, save map progress
       window.onbeforeunload = function(){
         localStorage.setItem("currentBuiltMap",JSON.stringify(mapArray))
+        localStorage.setItem("currentGameState",JSON.stringify(gameState))
       };
 
-      // If pressing N to reset the map
+      
       window.onkeypress = function(){
         if (event.keyCode === 110) {
+          // If pressing N to reset the map
           let response = prompt("Are you sure you want to clear the map? \n(Type 'yes' to proceed)");
           if (response == "yes") {
             mapArray = [];
           }
+        } else if (event.keyCode === 13) {
+          // If pressing enter to validate the map
+        } else if (event.keyCode === 112) {
+          // If pressing P to only play the map
+          gameState.playingSavedMap = true;
+          location.assign("main.html");
         }
       };
 
@@ -222,11 +250,6 @@
             // Counter the i+1
             mapArray.splice(blockIndex-1,1);
           }
-        }
-
-        // See if hitting enter to try out the course
-        if (keyboard.enter) {
-          // b
         }
 
         // Finally draw the map
