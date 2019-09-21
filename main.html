@@ -31,9 +31,16 @@
       savedMapArray.unshift([-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"]);
     }
 
+    // Look if a map is requested to be played via the course viewer and use that if supposed to
+    let mapToPlay = localStorage.getItem("mapToPlay");
+    if (mapToPlay && globalGameState.playingOnlineMap) {
+      savedMapArray = JSON.parse(mapToPlay);
+      savedMapArray.unshift([-1,2,"inv"],[-1,3,"inv"],[-1,4,"inv"],[-1,5,"inv"],[-1,6,"inv"],[-1,7,"inv"],[-1,8,"inv"],[-1,9,"inv"],[-1,10,"inv"],[-1,11,"inv"]);
+    }
+
     // If window is getting unloaded or leaving, save game state
     window.onbeforeunload = function(){
-      localStorage.setItem("currentGameState",JSON.stringify(globalGameState))
+      localStorage.setItem("currentGameState",JSON.stringify(globalGameState));
     };
 
     let mapArray = JSON.parse(JSON.stringify(savedMapArray));
@@ -72,15 +79,15 @@
     // ASSETS:
     // Define and preload textures
     const playerSpriteSheet = new Image();
-    playerSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617650288408395776/SMBPlayerSprites.png";
+    playerSpriteSheet.src = "SMBPlayerSprites.png";
     const playerSpriteSheetReversed = new Image();
-    playerSpriteSheetReversed.src = "https://cdn.discordapp.com/attachments/489085929726935041/617651006263656451/SMBPlayerSpritesReversed.png";
+    playerSpriteSheetReversed.src = "SMBPlayerSpritesReversed.png";
     const enemySpriteSheet = new Image();
-    enemySpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617817625778454537/SMBEnemySprites.png";
+    enemySpriteSheet.src = "SMBEnemySprites.png";
     const objectSpriteSheet = new Image();
-    objectSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/618484986642825217/SMBObjectSprites.png";
+    objectSpriteSheet.src = "SMBObjectSprites.png";
     const gameTileSheet = new Image();
-    gameTileSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617422854409158676/SMBTileset.png";
+    gameTileSheet.src = "SMBTileset.png";
 
     // Sounds
     const deathUrl = "https://cdn.discordapp.com/attachments/489085929726935041/616335506216583217/smb_mariodie.wav";
@@ -100,6 +107,11 @@
     preloadSound(flagpoleUrl);
     preloadSound(musicUrl);
 
+    // Redirect to the builder if joining without having chosen a map to play
+    if (!globalGameState || !globalGameState.playingSavedMap && !globalGameState.playingOnlineMap) {
+      window.location.href = "builder.html";
+    }
+    
     // Global variables
     const activation_threshold = 5;
 
@@ -788,9 +800,12 @@
           window.setTimeout(function(){
             // Remember that the course has been played through
             globalGameState.coursePlayed = true;
-            // Go back to the builder if playing a local map, else refresh the page
+
+            // Go back to the right place, else refresh the page
             if (globalGameState.playingSavedMap) {
-              location.assign("builder.html");
+              window.location.href = "builder.html";
+            } else if (globalGameState.playingOnlineMap) {
+              window.location.href = "index.html";
             } else {
               location.reload();
             }

@@ -4,14 +4,27 @@
     <meta charset="UTF-8">
     <title>Courses for Bario by add33m</title>
     <link rel="icon" href="barioicon.ico">
+
     <style>
       h1 {
         font-family: Tahoma, Verdana, sans-serif; 
-        padding: 30px 5% 10px;
+        margin-left: 40px;
+        margin-right: 40px;
+        padding: 20px 1em 20px 1em;
+        height: fit-content;
+        width: fit-content;
+        background-color: #35a81b;
+        border-radius: 20px;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
       }
 
       table {
-        width: 90%;
+        width: calc(100% - 80px);
+        margin-left: 40px;
         border-collapse: separate;
         border: 0px;
         border-spacing: 0 10px;
@@ -21,18 +34,29 @@
         height: 80px;
         text-align: center;
         font-family: Tahoma, Verdana, sans-serif;
-        background-color: yellowgreen;
+        background-color: #35a81b;
         border: 0px;
+        font-size: 1.3em;
       }
 
       tr td:first-child {
-        border-top-left-radius: 20px;
-        border-bottom-left-radius: 20px;
+        border-top-left-radius: 1em;
+        border-bottom-left-radius: 1em;
+      }
+
+      tr td:nth-last-child(2) {
+        background-color: transparent;
+        width: 10px;
+      }
+
+      tr td:nth-last-child(3) {
+        border-top-right-radius: 1em;
+        border-bottom-right-radius: 1em;
       }
 
       tr td:last-child {
-        border-top-right-radius: 20px;
-        border-bottom-right-radius: 20px;
+        border-radius: 1em;
+        cursor: pointer;
       }
 
       .container {
@@ -52,42 +76,82 @@
   </head>
 
   <body bgcolor="yellow">
-    <h1>Course lister for Bario by add33m</h1>
+    <span style="float: left;">
+      <h1>
+        Course lister for Bario by add33m
+      </h1>      
+    </span>
 
-    <div style="padding: 20px 5% 10px;">
+    <span style="float: right;"> 
+      <a href="https://www.github.com/add33m/bario">
+        <h1 style="margin-left: 0px;">
+          GitHub
+        </h1> 
+      </a>
+    </span>
+
+    <span style="float: right;"> 
+        <a href="builder.html">
+          <h1>
+            Builder
+          </h1>
+        </a>
+    </span>
+
+    <div>
       <script>
-          // Temp! Change this to real JSON file later
-          let data = [
-            {
-              "name": "coursename1",
-              "creator": "someone",
-              "likes": 3,
-              "courseId": 123456,
-              "courseData": [[1,1,"bricks"]],
-            },
-            {
-              "name": "coursename2",
-              "creator": "someone_else",
-              "likes": 45,
-              "courseId": 123457,
-              "courseData": [[1,1,"bricks"]],
-            },
-          ];
-          
-          document.write("<table>");
-          
-          for (let i = 0; i < data.length; i++) {
-            document.write('<tr>');
-            
-            // Table entries
-            document.write('<td>' + data[i]["name"] + '</td>');
-            document.write('<td>' + data[i]["creator"] + '</td>');
-            document.write('<td> <div class="container"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + data[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
-            document.write('<td>' + data[i]["courseId"] + '</td>');
-            document.write('</tr>');
+        // Temp! Change this to real JSON later
+        var indexJson = [
+          {
+            "name": "coursename1",
+            "creator": "someone",
+            "likes": 3,
+            "courseId": 123456,
+            "courseData": [
+              [
+                0,
+                1,
+                "bricks"
+              ]
+            ]
+          },
+          {
+            "name": "testCourse1",
+            "creator": "Adam",
+            "likes": 45,
+            "courseId": 198326,
+            "courseData": [[0,1,"bricks"],[1,1,"bricks"],[2,1,"bricks"],[3,1,"bricks"],[4,1,"bricks"],[5,1,"bricks"],[6,1,"bricks"],[7,1,"bricks"],[8,1,"bricks"],[9,1,"bricks"],[10,1,"bricks"],[11,1,"bricks"],[12,1,"bricks"],[13,1,"bricks"],[14,1,"bricks"],[15,1,"bricks"],[16,1,"bricks"],[17,1,"bricks"],[18,1,"bricks"],[22,1,"bricks"],[23,1,"bricks"],[24,1,"bricks"],[25,1,"bricks"],[26,1,"bricks"],[27,1,"bricks"],[28,1,"bricks"],[29,1,"bricks"],[30,2,"block"],[30,1,"bricks"],[31,1,"bricks"],[32,1,"bricks"],[33,1,"bricks"],[34,1,"bricks"],[35,1,"bricks"],[36,1,"bricks"],[36,2,"block"],[36,3,"flagpole"],[30,3,"block"],[30,4,"block"],[29,3,"block"],[29,2,"block"],[28,2,"block"],[31,5,"block"],[31,4,"block"],[31,3,"block"],[31,2,"block"],[32,6,"block"],[32,5,"block"],[32,4,"block"],[32,3,"block"],[32,2,"block"],[37,1,"bricks"],[38,1,"bricks"],[39,1,"bricks"],[40,1,"bricks"],[41,1,"bricks"],[42,2,"block"],[42,1,"bricks"],[19,1,"bricks"],[20,1,"bricks"],[21,1,"bricks"],[6,2,"block"],[18,3,"block"],[18,2,"block"]]
           }
-          document.write("</table>");
-          // https://cdn140.picsart.com/233951046063212.png?r1024x1024
+        ];
+          
+        function playCourse(n) {
+          // Set the gamestate to play the map
+          let gameState = {
+            playingSavedMap: false,
+            playingOnlineMap: true,
+            validatingMap: false,
+            coursePlayed: false,
+          };
+
+          localStorage.setItem("currentGameState",JSON.stringify(gameState));
+          localStorage.setItem("mapToPlay",JSON.stringify(indexJson[n].courseData));
+          window.location.href = "main.html";
+        }
+
+        document.write("<table>");
+        
+        for (let i = 0; i < indexJson.length; i++) {
+          document.write('<tr>');
+          
+          // Table entries
+          document.write('<td>' + indexJson[i]["name"] + '</td>');
+          document.write('<td>' + indexJson[i]["creator"] + '</td>');
+          document.write('<td> <div class="container"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + indexJson[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
+          document.write('<td>' + " " + '</td>'); // Spacing for last object/button
+          document.write('<td onclick="playCourse('+i+')">' + indexJson[i]["courseId"] + '</td>'); // If clicked on, play the course
+          document.write('</tr>');
+        }
+        document.write("</table>");
       </script>
     </div>
     

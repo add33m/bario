@@ -14,26 +14,20 @@
       
       // ASSETS:
       // Define and preload textures
-      const bricksUrl = new Image();
-      bricksUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048046299119831/block-16.gif";
-      const blockUrl = new Image();
-      blockUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617048181439463455/block-1.gif";
-      const grassUrl = new Image();
-      grassUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/616702235484618754/flatgrass.png";
       const qmarkUrl = new Image();
       qmarkUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617123384593088516/block-193.gif";
       const qmarkUsedUrl = new Image();
       qmarkUsedUrl.src = "https://cdn.discordapp.com/attachments/489085929726935041/617130212869799993/block-192.gif";
       const playerSpriteSheet = new Image();
-      playerSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617650288408395776/SMBPlayerSprites.png";
+      playerSpriteSheet.src = "SMBPlayerSprites.png";
       const playerSpriteSheetReversed = new Image();
-      playerSpriteSheetReversed.src = "https://cdn.discordapp.com/attachments/489085929726935041/617651006263656451/SMBPlayerSpritesReversed.png";
+      playerSpriteSheetReversed.src = "SMBPlayerSpritesReversed.png";
       const enemySpriteSheet = new Image();
-      enemySpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617817625778454537/SMBEnemySprites.png";
+      enemySpriteSheet.src = "SMBEnemySprites.png";
       const objectSpriteSheet = new Image();
-      objectSpriteSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/618484986642825217/SMBObjectSprites.png";
+      objectSpriteSheet.src = "SMBObjectSprites.png";
       const gameTileSheet = new Image();
-      gameTileSheet.src = "https://cdn.discordapp.com/attachments/489085929726935041/617422854409158676/SMBTileset.png";
+      gameTileSheet.src = "SMBTileset.png";
 
 
       // Map stuff
@@ -55,16 +49,20 @@
       } else {
         gameState = {
           playingSavedMap: false,
+          playingOnlineMap: false,
           validatingMap: false,
           coursePlayed: false,
         };
       }
 
       // Check if coming back from after validating a map, then reset the gamestate
-      if (gameState.playingSavedMap && gameState.validatingMap && gameState.coursePlayed) {
+      if (gameState.playingSavedMap && gameState.validatingMap && gameState.coursePlayed && ! gameState.playingOnlineMap) {
         // Upload map
+        // Create a JSON string and show that
+        alert(JSON.stringify(mapArray));
       }
       gameState.playingSavedMap = false;
+      gameState.playingOnlineMap = false;
       gameState.validatingMap = false;
       gameState.coursePlayed = false;
 
@@ -136,9 +134,7 @@
           if (type != "inv") {
 
             // Draw the image with the right texture, and animated if should be
-            if (type == "grass") {
-              drawImg(grassUrl,mapArray[i][0],mapArray[i][1]);
-            } else if (type == "bricks") {
+            if (type == "bricks") {
               drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,0,221,16,16,32,32,1,1);
             } else if (type == "block") {
               drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,102,0,16,16,32,32,1,1);
@@ -182,10 +178,13 @@
           }
         } else if (event.keyCode === 13) {
           // If pressing enter to validate the map
+          gameState.playingSavedMap = true;
+          gameState.validatingMap = true;
+          window.location.href = "main.html";
         } else if (event.keyCode === 112) {
           // If pressing P to only play the map
           gameState.playingSavedMap = true;
-          location.assign("main.html");
+          window.location.href = "main.html";
         }
       };
 
