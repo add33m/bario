@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Courses for Bario by add33m</title>
+    <link rel="icon" href="barioicon.ico">
+    <style>
+      h1 {
+        font-family: Tahoma, Verdana, sans-serif; 
+        padding: 30px 5% 10px;
+      }
+
+      table {
+        width: 90%;
+        border-collapse: separate;
+        border: 0px;
+        border-spacing: 0 10px;
+      }
+
+      td {
+        height: 80px;
+        text-align: center;
+        font-family: Tahoma, Verdana, sans-serif;
+        background-color: yellowgreen;
+        border: 0px;
+      }
+
+      tr td:first-child {
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+      }
+
+      tr td:last-child {
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+      }
+
+      .container {
+        position: relative;
+        text-align: center;
+        color: white;
+      }
+
+      .centered {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+    </style>
+  </head>
+
+  <body bgcolor="yellow">
+    <h1>Course lister for Bario by add33m</h1>
+
+    <div style="padding: 20px 5% 10px;">
+      <script>
+          // Temp! Change this to real JSON file later
+          let data = [
+            {
+              "name": "coursename1",
+              "creator": "someone",
+              "likes": 3,
+              "courseId": 123456,
+              "courseData": [[1,1,"bricks"]],
+            },
+            {
+              "name": "coursename2",
+              "creator": "someone_else",
+              "likes": 45,
+              "courseId": 123457,
+              "courseData": [[1,1,"bricks"]],
+            },
+          ];
+          
+          document.write("<table>");
+          
+          for (let i = 0; i < data.length; i++) {
+            document.write('<tr>');
+            
+            // Table entries
+            document.write('<td>' + data[i]["name"] + '</td>');
+            document.write('<td>' + data[i]["creator"] + '</td>');
+            document.write('<td> <div class="container"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + data[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
+            document.write('<td>' + data[i]["courseId"] + '</td>');
+            document.write('</tr>');
+          }
+          document.write("</table>");
+          // https://cdn140.picsart.com/233951046063212.png?r1024x1024
+      </script>
+    </div>
+    
+  </body>
+</html>
