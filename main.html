@@ -120,6 +120,60 @@
     context.imageSmoothingEnabled = false;
     updatesPerSecond = 30;
 
+    // Contains functions to allow using multiple inputs or devices to play
+    class Controls {
+
+      // If wanting to move left
+      left() {
+        // Check for keyboard input
+        if (keyboard.left || keyboard.a) {
+          return true;
+        }
+
+        // Go through all touch points and see if any one of them are in the left portion of the screen
+        for (let i=0; i<touchscreen.points.length; i++) {
+          let point = touchscreen.points[i];
+          if (point.x < totalWidth * .4) {
+            return true;
+          }
+        }
+      }
+
+      // If wanting to move right
+      right() {
+        // Check for keyboard input
+        if (keyboard.right || keyboard.d) {
+          return true;
+        }
+
+        // Go through all touch points and see if any one of them are in the right portion of the screen
+        for (let i=0; i<touchscreen.points.length; i++) {
+          let point = touchscreen.points[i];
+          if (point.x > totalWidth * .6) {
+            return true;
+          }
+        }
+      }
+
+      // If wanting to jump
+      jump() {
+        // Check for keyboard input
+        if (keyboard.up || keyboard.w) {
+          return true;
+        }
+
+        // Go through all touch points and see if any one of them are in the middle portion of the screen
+        for (let i=0; i<touchscreen.points.length; i++) {
+          let point = touchscreen.points[i];
+          if (point.x > totalWidth * .4 && point.x < totalWidth * .6) {
+            return true;
+          }
+        }
+      }
+    }
+
+    let controls = new Controls();
+
     let iEntities = [];
 
     class Entity {
@@ -278,7 +332,7 @@
 
                 // Let player jump or bounce on goomba (delayed so collision doesn't affect jump)
                 window.setTimeout(function(){
-                  if (keyboard["w"]) {ent.yv = -13.5}
+                  if (controls.jump()) {ent.yv = -13.5}
                   else {ent.yv = -8}
                 },10)
               }
@@ -394,7 +448,7 @@
       apply_forces() {
 
         // If not on the ground, add gravity. Lower gravity if holding down jump key for longer jump and going upwards
-        if (this.yv < 0 && keyboard["w"] && (this.state > 0 || this.state < -1) && this.state != 5) {
+        if (this.yv < 0 && controls.jump() && (this.state > 0 || this.state < -1) && this.state != 5) {
             this.yv += this.gravity / 2.4;
           } else if(this.state != 5) {
             this.yv += this.gravity
@@ -429,12 +483,12 @@
           if (this.state == 0) {this.kill()}
 
           // Add sidewards movement and friction if no sideways key is being held down
-          if (keyboard["d"] && (this.state > 0 || this.state < -1)) {
+          if (controls.right() && (this.state > 0 || this.state < -1)) {
             // Left
             this.xv += 1.5;
             this.facing = 0;  
             if (this.xv > 5) {this.xv = 5}      
-          } else if (keyboard["a"] && (this.state > 0 || this.state < -1)) {
+          } else if (controls.left() && (this.state > 0 || this.state < -1)) {
             // Right
             this.xv -= 1.5;
             this.facing = 1;
@@ -442,12 +496,12 @@
           }
 
           // Jump
-          if (keyboard["w"] && this.touching_ground && (this.state > 0 || this.state < -1) && ! this.jumped) {
+          if (controls.jump() && this.touching_ground && (this.state > 0 || this.state < -1) && ! this.jumped) {
             this.yv = -13.5;
             playSound(jumpUrl, .4);
             // Prevent jumping again if not released jump key and landed
             this.jumped = true
-          } else if (! keyboard["w"] && this.touching_ground) {this.jumped = false}
+          } else if (! controls.jump() && this.touching_ground) {this.jumped = false}
         }
 
         // Sidescroll the canvas if the player is sufficiently far out to the screen
