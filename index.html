@@ -4,17 +4,48 @@
     <meta charset="UTF-8">
     <title>Courses for Bario by add33m</title>
     <link rel="icon" href="barioicon.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik">
 
     <style>
+      body {
+        background-image: url("https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia-elerium.cursecdn.com%2Favatars%2F25%2F674%2F635777619475927501.png&f=1&nofb=1");
+        background-repeat: repeat;
+        background-size: 64px;
+      }
+
       h1 {
-        font-family: Tahoma, Verdana, sans-serif; 
+        font-family: "Rubik", sans-serif;
+        font-weight: normal;
+        letter-spacing: -1px;
         margin-left: 40px;
         margin-right: 40px;
         padding: 20px 1em 20px 1em;
+        box-sizing: border-box;
         height: fit-content;
         width: fit-content;
-        background-color: #35a81b;
-        border-radius: 20px;
+        background-color: #f0f1f5;
+        color: #3a3d42;
+        border-radius: 5px;
+        border-left: 7px solid #acb1bf;
+      }
+
+      .mainButton {
+        font-family: "Rubik", sans-serif;
+        font-weight: normal;
+        letter-spacing: -1px;
+        margin-right: 40px;
+        padding: 20px 1em 20px 1em;
+        box-sizing: border-box;
+        height: fit-content;
+        width: fit-content;
+        background-color: #6cb6f5;
+        color: #f0f1f5;
+        border-radius: 5px;
+        border-right: 7px solid #5aa2e0;
+        display: block;
+        font-size: 2em;
+        margin-top: 0.67em;
+        margin-bottom: 0.67em;
       }
 
       a {
@@ -72,10 +103,37 @@
         transform: translate(-50%, -50%);
       }
 
+      .courseContainer {
+        box-sizing: border-box;
+        size: absolute;
+        width: 50%;
+        height: fit-content;
+        padding-bottom: 10px;
+        background-color: white;
+        border-radius: 5px;
+        border-left: 7px solid #acb1bf;
+        margin: 20px auto 0 auto;
+        overflow: hidden;
+      }
+
+      .courseData {
+        position: relative;
+        width: 70%;
+        height: 100%;
+        margin: 10px 0 0 15px;
+        padding: 5px 10px;
+        border: 2.5px solid #acb1bf;
+        border-radius: 12px;
+        font-family: "Rubik", sans-serif;
+        font-weight: 200;
+        letter-spacing: -1px;
+        font-size: 1.5em;
+      }
+
     </style>
   </head>
 
-  <body bgcolor="yellow">
+  <body bgcolor="#515660">
     <span style="float: left;">
       <h1>
         Course lister for Bario by add33m
@@ -84,17 +142,17 @@
 
     <span style="float: right;"> 
       <a href="https://www.github.com/add33m/bario">
-        <h1 style="margin-left: 0px;">
+        <div class="mainButton">
           GitHub
-        </h1> 
+        </div> 
       </a>
     </span>
 
     <span style="float: right;"> 
         <a href="builder.html">
-          <h1>
+          <div class="mainButton">
             Builder
-          </h1>
+          </div>
         </a>
     </span>
 
@@ -153,6 +211,18 @@
         }
         document.write("</table>");
       </script>
+
+      <div class="courseContainer">
+        <div class="courseData">
+          TestCourse
+        </div>
+        <div class="courseData" style="width: 40%; float: left;">
+          Adam
+        </div>
+        <div class="courseData" style="width: Calc(30% - 40px); float: left; text-align: center;">
+          123-456
+        </div>
+      </div>
     </div>
     
   </body>
