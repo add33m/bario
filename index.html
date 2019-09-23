@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik">
 
     <style>
-      body {
+      /*body {
         background-image: url("https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia-elerium.cursecdn.com%2Favatars%2F25%2F674%2F635777619475927501.png&f=1&nofb=1");
         background-repeat: repeat;
         background-size: 64px;
-      }
+      }*/
 
       h1 {
         font-family: "Rubik", sans-serif;
@@ -90,23 +90,33 @@
         cursor: pointer;
       }
 
-      .container {
+      .imgContainer {
         position: relative;
         text-align: center;
         color: white;
+        float: right;
+        vertical-align: middle;
+        top: 20px; 
+        right: 10px;
       }
 
       .centered {
         position: absolute;
-        top: 50%;
+        top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
+        font-family: "Rubik", sans-serif;
+        font-weight: 900;
+        letter-spacing: -1px;
+        font-size: 1.5em;
       }
 
       .courseContainer {
         box-sizing: border-box;
         size: absolute;
-        width: 50%;
+        width: fit-content;
+        max-width: 800px;
+        min-width: 600px;
         height: fit-content;
         padding-bottom: 10px;
         background-color: white;
@@ -118,7 +128,7 @@
 
       .courseData {
         position: relative;
-        width: 70%;
+        width: 80%;
         height: 100%;
         margin: 10px 0 0 15px;
         padding: 5px 10px;
@@ -204,7 +214,7 @@
           // Table entries
           document.write('<td>' + indexJson[i]["name"] + '</td>');
           document.write('<td>' + indexJson[i]["creator"] + '</td>');
-          document.write('<td> <div class="container"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + indexJson[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
+          document.write('<td> <div class="imgContainer"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + indexJson[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
           document.write('<td>' + " " + '</td>'); // Spacing for last object/button
           document.write('<td onclick="playCourse('+i+')">' + indexJson[i]["courseId"] + '</td>'); // If clicked on, play the course
           document.write('</tr>');
@@ -213,15 +223,27 @@
       </script>
 
       <div class="courseContainer">
-        <div class="courseData">
+        <div class="imgContainer"> 
+          <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" style="width:80px; height: 80px;"> 
+          <div class="centered">
+            23
+          </div> 
+        </div>
+
+        <div style="width: Calc(100% - 20px)">
+          <div class="courseData">
           TestCourse
         </div>
-        <div class="courseData" style="width: 40%; float: left;">
+
+        <div class="courseData" style="width: 50%; float: left;">
           Adam
         </div>
+
         <div class="courseData" style="width: Calc(30% - 40px); float: left; text-align: center;">
           123-456
         </div>
+        </div>
+        
       </div>
     </div>
     
