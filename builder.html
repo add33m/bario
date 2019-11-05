@@ -44,7 +44,7 @@
 
       // Look for the current state of the game across pages, if no state is saved, create a new array for turning into JSON later
       let gameState = localStorage.getItem("currentGameState");
-      if (gameState) {
+      if (gameState != "null") {
         gameState = JSON.parse(gameState);
       } else {
         gameState = {
