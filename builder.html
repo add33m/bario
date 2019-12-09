@@ -43,9 +43,9 @@
       }
 
       // Look for the current state of the game across pages, if no state is saved, create a new array for turning into JSON later
-      let gameState = localStorage.getItem("currentGameState");
-      if (gameState != "null") {
-        gameState = JSON.parse(gameState);
+      let gameState;
+      if (localStorage.getItem("currentGameState") != null) {
+        gameState = JSON.parse(localStorage.getItem("currentGameState"));
       } else {
         gameState = {
           playingSavedMap: false,
@@ -141,7 +141,7 @@
             } else if (type == "flagpole") {
               drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
               drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - blockSize * 8,765,435,16,16,32,32);
-            } else if (type == "coin_block") {
+            } else if (type == "mushroom_block") {
               drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
             } else if (type == "used_block") {
               drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
@@ -222,9 +222,11 @@
         } else if (keyboard.two) {
           selected = "block";
         } else if (keyboard.three) {
-          selected = "flagpole";
+          selected = "mushroom_block";
         } else if (keyboard.four) {
           selected = "goomba";
+        } else if (keyboard.five) {
+          selected = "flagpole";
         }
 
         // If clicking, check what block is clicked on
