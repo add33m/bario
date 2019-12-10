@@ -748,7 +748,7 @@
           } else if (type == "flagpole") {
             drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
             drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - flagPos,765,435,16,16,32,32);
-          } else if (type == "coin_block") {
+          } else if (type == "mushroom_block") {
             drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,34,0,16,16,32,32,1,1);
           } else if (type == "used_block") {
             drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,85,0,16,16,32,32,1,1);
@@ -790,17 +790,17 @@
         let type = entity.type;
 
         // Call off the drawing if iEntity is inactive
-        if (entity.state < 0) {return null}
-
-        // Draw the image with the right texture, and animated if should be
-        if (type == "goomba") {
-          if (entity.vis_state == 0) {
-            drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
-          } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
-        } else if (type == "test") {
-          drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
-        } else if (type == "mushroom") {
-          drawAnimImg(playerSpriteSheet,1,1,entity.x,entity.y,0,588,16,16,32,32,1,1);
+        if (entity.state >= 0) {
+          // Draw the image with the right texture, and animated if should be
+          if (type == "goomba") {
+            if (entity.vis_state == 0) {
+              drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
+            } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
+          } else if (type == "test") {
+            drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
+          } else if (type == "mushroom") {
+            drawAnimImg(playerSpriteSheet,1,1,entity.x,entity.y,0,588,16,16,32,32,1,1);
+          }
         }
       }
     }
