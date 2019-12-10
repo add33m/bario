@@ -520,7 +520,7 @@
         if (canvasPos > 0) {
           translate(-canvasPos,0);
           canvasPos = 0;
-        } else if (-canvasPos + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7)) {
+        } else if (-canvasPos + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7) && canvasPos != 0) {
           // Find how much too far it went
           let diff = -canvasPos + (totalWidth * scale_factor) - (flagpolePosX + blockSize * 7);
           translate(diff,0);
