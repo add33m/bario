@@ -142,9 +142,9 @@
               drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
               drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - blockSize * 8,765,435,16,16,32,32);
             } else if (type == "mushroom_block") {
-              drawAnimImg(qmarkUrl,1,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize);
+              drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,34,0,16,16,32,32,1,1);
             } else if (type == "used_block") {
-              drawImg(qmarkUsedUrl,mapArray[i][0],mapArray[i][1]);
+              drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,85,0,16,16,32,32,1,1);
             } else if (type == "goomba") {
               drawAnimImg(enemySpriteSheet,2,.4,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,0,1,16,16,32,32);
             }
