@@ -5,145 +5,10 @@
     <title>Courses for Bario by add33m</title>
     <link rel="icon" href="barioicon.ico">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik">
-
-    <style>
-      /*body {
-        background-image: url("https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia-elerium.cursecdn.com%2Favatars%2F25%2F674%2F635777619475927501.png&f=1&nofb=1");
-        background-repeat: repeat;
-        background-size: 64px;
-      }*/
-
-      h1 {
-        font-family: "Rubik", sans-serif;
-        font-weight: normal;
-        letter-spacing: -1px;
-        margin-left: 40px;
-        margin-right: 40px;
-        padding: 20px 1em 20px 1em;
-        box-sizing: border-box;
-        height: fit-content;
-        width: fit-content;
-        background-color: #f0f1f5;
-        color: #3a3d42;
-        border-radius: 5px;
-        border-left: 7px solid #acb1bf;
-      }
-
-      .mainButton {
-        font-family: "Rubik", sans-serif;
-        font-weight: normal;
-        letter-spacing: -1px;
-        margin-right: 40px;
-        padding: 20px 1em 20px 1em;
-        box-sizing: border-box;
-        height: fit-content;
-        width: fit-content;
-        background-color: #6cb6f5;
-        color: #f0f1f5;
-        border-radius: 5px;
-        border-right: 7px solid #5aa2e0;
-        display: block;
-        font-size: 2em;
-        margin-top: 0.67em;
-        margin-bottom: 0.67em;
-      }
-
-      a {
-        text-decoration: none;
-        color: inherit;
-      }
-
-      table {
-        width: calc(100% - 80px);
-        margin-left: 40px;
-        border-collapse: separate;
-        border: 0px;
-        border-spacing: 0 10px;
-      }
-
-      td {
-        height: 80px;
-        text-align: center;
-        font-family: Tahoma, Verdana, sans-serif;
-        background-color: #35a81b;
-        border: 0px;
-        font-size: 1.3em;
-      }
-
-      tr td:first-child {
-        border-top-left-radius: 1em;
-        border-bottom-left-radius: 1em;
-      }
-
-      tr td:nth-last-child(2) {
-        background-color: transparent;
-        width: 10px;
-      }
-
-      tr td:nth-last-child(3) {
-        border-top-right-radius: 1em;
-        border-bottom-right-radius: 1em;
-      }
-
-      tr td:last-child {
-        border-radius: 1em;
-        cursor: pointer;
-      }
-
-      .imgContainer {
-        position: relative;
-        text-align: center;
-        color: white;
-        float: right;
-        vertical-align: middle;
-        top: 20px; 
-        right: 10px;
-      }
-
-      .centered {
-        position: absolute;
-        top: 45%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-family: "Rubik", sans-serif;
-        font-weight: 900;
-        letter-spacing: -1px;
-        font-size: 1.5em;
-      }
-
-      .courseContainer {
-        box-sizing: border-box;
-        size: absolute;
-        width: fit-content;
-        max-width: 800px;
-        min-width: 600px;
-        height: fit-content;
-        padding-bottom: 10px;
-        background-color: white;
-        border-radius: 5px;
-        border-left: 7px solid #acb1bf;
-        margin: 20px auto 0 auto;
-        overflow: hidden;
-      }
-
-      .courseData {
-        position: relative;
-        width: 80%;
-        height: 100%;
-        margin: 10px 0 0 15px;
-        padding: 5px 10px;
-        border: 2.5px solid #acb1bf;
-        border-radius: 12px;
-        font-family: "Rubik", sans-serif;
-        font-weight: 200;
-        letter-spacing: -1px;
-        font-size: 1.5em;
-      }
-
-    </style>
+    <link rel="stylesheet" href="stylesheet.css">
   </head>
 
-  <body bgcolor="#515660">
+  <body>
     <span style="float: left;">
       <h1>
         Course lister for Bario by add33m
@@ -166,7 +31,7 @@
         </a>
     </span>
 
-    <div>
+    <div class="course-book">
       <script>
         // Temp! Change this to real JSON later
         var indexJson = [
@@ -199,44 +64,30 @@
           localStorage.setItem("mapToPlay",JSON.stringify(indexJson[n].courseData));
           window.location.href = "main.html";
         }
-
-        document.write("<table>");
         
         for (let i = 0; i < indexJson.length; i++) {
-          document.write('<tr>');
           
-          // Table entries
-          document.write('<td>' + indexJson[i]["name"] + '</td>');
-          document.write('<td>' + indexJson[i]["creator"] + '</td>');
-          document.write('<td> <div class="imgContainer"> <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" alt="Likes" style="height:50px; padding-top: 8px;"> <div class="centered" style="font-weight: 900;">' + indexJson[i]["likes"] + '</div> </div> </td>'); // Heart image with likes on top
-          document.write('<td>' + " " + '</td>'); // Spacing for last object/button
-          document.write('<td onclick="playCourse('+i+')">' + indexJson[i]["courseId"] + '</td>'); // If clicked on, play the course
-          document.write('</tr>');
+          // Flex book entries
+          document.write('<div class="course-container">');
+          document.write('<div class="course-name course-data">' + indexJson[i]["name"] + '</div>');
+          document.write('<div class="course-creator course-data">' + indexJson[i]["creator"] + '</div>');
+          document.write('<div class="course-likes">' + indexJson[i]["likes"] + '</div>');
+          document.write('<div class="course-id course-data" onclick="playCourse('+i+')">' + indexJson[i]["courseId"] + '</div>'); // If clicked on, play the course
+          document.write('</div>');
         }
-        document.write("</table>");
       </script>
 
-      <div class="courseContainer">
-        <div class="imgContainer"> 
-          <img src="https://cdn140.picsart.com/233951046063212.png?r1024x1024" style="width:80px; height: 80px;"> 
-          <div class="centered">
-            23
-          </div> 
+      
+      <!-- Template for a course
+        <div class="course-container">
+          <div class="course-name course-data">Course Name</div>
+          <div class="course-creator course-data">Course Creator</div>
+          <div class="course-id course-data">123-456</div>
+          <div class="course-likes">23</div>
         </div>
-        <div style="width: Calc(100% - 20px)">
-          <div class="courseData">
-            TestCourse
-          </div>
-          <div class="courseData" style="width: 50%; float: left;">
-            Adam
-          </div>
-          <div class="courseData" style="width: Calc(30% - 40px); float: left; text-align: center;">
-            123-456
-          </div>
-        </div>
-        
-      </div>
+      -->
+
     </div>
-    
+
   </body>
 </html>
