@@ -33,12 +33,13 @@
 
     <div class="course-book">
       <script>
+        // XHR Request function
         function XHR(method,url,body) {
           let xhr = new XMLHttpRequest();
           xhr.open(method,url,false);
           xhr.send(body);
           return xhr.responseText;
-        } 
+        }
           
         function playCourse(n) {
           // Set the gamestate to play the map

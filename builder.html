@@ -11,6 +11,14 @@
       /*
         Course builder for Bario by add33m (github.com/add33m/bario)
       */
+
+      // XHR Request function
+      function XHR(method,url,body) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method,url,false);
+        xhr.send(body);
+        return xhr.responseText;
+      } 
       
       // ASSETS:
       // Define and preload textures
@@ -58,8 +66,15 @@
       // Check if coming back from after validating a map, then reset the gamestate
       if (gameState.playingSavedMap && gameState.validatingMap && gameState.coursePlayed && ! gameState.playingOnlineMap) {
         // Upload map
+        let data = {};
+
+        data.courseData = JSON.stringify(mapArray);
+        data.name = prompt("Type a course name!");
+        data.creator = prompt("Type your name/nick!");
+
+        XHR("POST","http://localhost:8441/addcourse",JSON.stringify(data)); // Replace localhost with the ip/url for the server location!
         // Create a JSON string and show that
-        alert(JSON.stringify(mapArray));
+        alert("Uploaded map!");
       }
       gameState.playingSavedMap = false;
       gameState.playingOnlineMap = false;
