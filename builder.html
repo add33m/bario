@@ -12,10 +12,10 @@
         Course builder for Bario by add33m (github.com/add33m/bario)
       */
 
-      // XHR Request function
+      // XHR function
       function XHR(method,url,body) {
         let xhr = new XMLHttpRequest();
-        xhr.open(method,url,false);
+        xhr.open(method,url,true);
         xhr.send(body);
         return xhr.responseText;
       } 
@@ -72,9 +72,11 @@
         data.name = prompt("Type a course name!");
         data.creator = prompt("Type your name/nick!");
 
-        XHR("POST","http://localhost:8441/addcourse",JSON.stringify(data)); // Replace localhost with the ip/url for the server location!
-        // Create a JSON string and show that
-        alert("Uploaded map!");
+        // Only upload if name and creator name is typed in
+        if (data.name != null && data.creator != null) {
+          let message = XHR("POST","http://localhost:8441/addcourse",JSON.stringify(data)); // Replace localhost with the ip/url for the server location!
+          alert(message || "Published course!");
+        }
       }
       gameState.playingSavedMap = false;
       gameState.playingOnlineMap = false;
