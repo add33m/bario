@@ -281,12 +281,17 @@
             canvasPosY -= 8;
             translate(0,-8);
           } 
-        } 
+        }
+
+        // Check if opening menu by clicking on the preview block
+        if (mouse.left && !menuOpen && mouse.x * scale_factor > 10 && mouse.x * scale_factor < 10+blockSize*2 && mouse.y * scale_factor > 10 && mouse.y * scale_factor < 10+blockSize*2) {
+          menuOpen = true;
+        }
 
         // If clicking, check what block is clicked on
         if (mouse.left && !menuOpen) {
           let mouseXblock = floor((mouse.x * scale_factor -canvasPosX) / blockSize);
-          let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
+          let mouseYblock = ceil(((totalHeight - mouse.y) * scale_factor +canvasPosY) / blockSize);
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
           
@@ -297,7 +302,7 @@
         // Removing blocks if right clicked on
         } else if (mouse.right && !menuOpen) {
           let mouseXblock = floor((mouse.x * scale_factor -canvasPosX) / blockSize);
-          let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
+          let mouseYblock = ceil(((totalHeight - mouse.y) * scale_factor +canvasPosY) / blockSize);
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
 
@@ -324,19 +329,19 @@
 
         // Draw block selection menu if open
         if (menuOpen) {
-          rectangle(100 -canvasPosX,100 -canvasPosY,(totalWidth-200)*scale_factor,(totalHeight-200)*scale_factor,"grey");
+          rectangle(100 -canvasPosX,100 -canvasPosY,(totalWidth)*scale_factor-200,(totalHeight)*scale_factor-200,"grey");
           text(110 -canvasPosX,140 -canvasPosY,30,"Select a block","black");
-          text(110 -canvasPosX,100 + (totalHeight-200)*scale_factor - 30 -canvasPosY,10,"Enter - Upload map","black");
-          text(110 -canvasPosX,100 + (totalHeight-200)*scale_factor - 15 -canvasPosY,10,"N - New map","black");
+          text(110 -canvasPosX,100 + (totalHeight)*scale_factor - 200 - 30 -canvasPosY,10,"Enter - Upload map","black");
+          text(110 -canvasPosX,100 + (totalHeight)*scale_factor - 200 - 15 -canvasPosY,10,"N - New map","black");
 
           // Draw all available blocks
           let row = 0;
-          let blocksPerRow = floor((totalWidth-240) / (blockSize * 1.5));
+          let blocksPerRow = floor((totalWidth*scale_factor - 200) / (blockSize * 3));
           for (let i=0; i<blockTypes.length; i++) {
             let block = blockTypes[i];
-            if (i-blocksPerRow*row > blocksPerRow) {row++}
+            if (i-blocksPerRow*row > blocksPerRow-1) {row++}
 
-            let x = 110 + i * blockSize * 3 - blocksPerRow * row;
+            let x = 120 + (i - blocksPerRow * row) * blockSize * 3;
             let y = 160 + row * blockSize * 3;
 
             // If clicked, check if block is clicked and select block + close menu if so

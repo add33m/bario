@@ -45,8 +45,8 @@
 
     let mapArray = JSON.parse(JSON.stringify(savedMapArray));
 
-    // Scaling (12 blocks tall)
-    const scale_factor = blockSize * 12 / totalHeight;
+    // Scaling (14 blocks tall)
+    const scale_factor = blockSize * 14 / totalHeight;
     scale(1 / scale_factor,1 / scale_factor);
 
     // Character selection
@@ -74,7 +74,8 @@
     }
     
     // Canvas moving
-    let canvasPos = 0;
+    let canvasPosX = 0;
+    let canvasPosY = 0;
     
     // ASSETS:
     // Define and preload textures
@@ -96,7 +97,7 @@
     const stompUrl = "https://cdn.discordapp.com/attachments/489085929726935041/617815051428036608/smb_stomp.wav";
     const winUrl = "https://cdn.discordapp.com/attachments/489085929726935041/619212400532652068/smb_win.mp3";
     const flagpoleUrl = "https://cdn.discordapp.com/attachments/489085929726935041/619967226564313088/smb_flagpole.wav";
-    const musicUrl = "http://www.mariomayhem.com/downloads/sound_tracks/Super_Mario_Bros._1/01-main-theme-overworld.mp3";
+    const musicUrl = "main-theme-overworld.mp3";
 
     // Preload sounds
     preloadSound(deathUrl);
@@ -513,24 +514,39 @@
         }
 
         // Sidescroll the canvas if the player is sufficiently far out to the screen and still alive
-        if (this.state > 0 && this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPos + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
-          canvasPos -= this.xv;
+        if (this.state > 0 && this.x + canvasPosX > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPosX + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
+          canvasPosX -= this.xv;
           translate(-this.xv,0);
-        } else if (this.state > 0 && this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
-          canvasPos -= this.xv;
+        } else if (this.state > 0 && this.x + canvasPosX < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPosX < 0) {
+          canvasPosX -= this.xv;
           translate(-this.xv,0);
         }
         // Make sure canvas doesn't scroll too far in either direction
-        if (canvasPos > 0) {
-          translate(-canvasPos,0);
-          canvasPos = 0;
-        } else if (-canvasPos + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7) && canvasPos != 0) {
+        if (canvasPosX > 0) {
+          translate(-canvasPosX,0);
+          canvasPosX = 0;
+        } else if (-canvasPosX + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7) && canvasPosX != 0) {
           // Find how much too far it went
-          let diff = -canvasPos + (totalWidth * scale_factor) - (flagpolePosX + blockSize * 7);
+          let diff = -canvasPosX + (totalWidth * scale_factor) - (flagpolePosX + blockSize * 7);
           translate(diff,0);
-          canvasPos += diff;
+          canvasPosX += diff;
         }
 
+        // Vertical scroll if too far up on the screen
+        if (this.state > 0 && this.y - canvasPosY < totalHeight * scale_factor * .1 && this.yv < 0) {
+          let diff = abs((this.y - canvasPosY) - totalHeight * scale_factor * .1);
+          canvasPosY -= diff;
+          translate(0,diff);
+         } else if (this.state > 0 && this.y+this.height - canvasPosY > totalHeight * scale_factor * .7 && this.yv > 0 && canvasPosY < 0) {
+          let diff = abs((this.y+this.height - canvasPosY) - totalHeight * scale_factor * .7);
+          canvasPosY += diff;
+          translate(0,-diff);
+        }
+        // Make sure canvas doesn't scroll too far down
+        if (canvasPosY > 0) {
+          translate(0,canvasPosY);
+          canvasPosY = 0;
+        }
       }
 
       // Kills player
@@ -569,8 +585,8 @@
         player.friction = 1.4;
         
         // Move back the canvas
-        translate(-canvasPos,0);
-        canvasPos = 0;
+        translate(-canvasPosX,0);
+        canvasPosX = 0;
 
         // Reset the music
         stopSound(musicUrl);
@@ -731,10 +747,10 @@
     function drawMap() {
 
       // Draw background
-      rectangle(-canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
+      rectangle(-canvasPosX,canvasPosY,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
 
       // Find middle point on screen
-      let screen_mid = -canvasPos + totalWidth * scale_factor / 2
+      let screen_mid = -canvasPosX + totalWidth * scale_factor / 2
 
       // Go through every block
       for (let i = 0; i < mapArray.length; i++) {
@@ -782,7 +798,7 @@
         }
 
         // Find middle point on screen
-        let screen_mid = -canvasPos + totalWidth * scale_factor / 2;
+        let screen_mid = -canvasPosX + totalWidth * scale_factor / 2;
         // Remove entity if is too far away to optimize framerates
         if (abs(entity.x - screen_mid) > totalWidth * scale_factor * .6) {
           entity.state = -1;
