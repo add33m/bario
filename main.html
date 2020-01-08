@@ -315,14 +315,16 @@
             // If entity is a player
             if (ent.classType == "player") {
               // If hitting a goomba from any side but the top, damage/kill the player and make it invincible for a while
-              if (side != 2 && entity.type == "goomba" && ent.state > 1) {
+              if (side != 2 && entity.type == "goomba" && ent.state == 2) {
                 let lastState = ent.state;
                 ent.state -= 5;
                 ent.y += 32;
                 ent.height = 32;
                 ent.vis_state -= 50;
                 window.setTimeout(function(){
-                  ent.state = lastState - 1;                 
+                  if (ent.state == lastState - 5) {
+                    ent.state = lastState - 1; 
+                  }          
                 },3000);
 
               } else if (side != 2 && entity.type == "goomba" && ent.state == 1) {
@@ -341,14 +343,17 @@
               }
 
               // Give power up if touching a mushroom
-              if (ent.state < 2 && entity.type == "mushroom") {
+              if (entity.type == "mushroom") {
+                if (ent.state == 1 || ent.state == -3) {
+                  ent.state = 2;
+                  ent.y -= 32;
+                  ent.height = 2*blockSize;
+                  activatePhysics = false;
+                  window.setTimeout(function(){activatePhysics = true},600);
+                }
+
+                // Make sure mushroom is removed even if not getting power up
                 entity.kill();
-                ent.state += 1;
-                ent.vis_state += 10;
-                ent.y -= 32;
-                ent.height = 2*blockSize;
-                activatePhysics = false;
-                window.setTimeout(function(){activatePhysics = true},600);
               }
 
             // If entity is an iEntity
@@ -507,11 +512,11 @@
           } else if (! controls.jump() && this.touching_ground) {this.jumped = false}
         }
 
-        // Sidescroll the canvas if the player is sufficiently far out to the screen
-        if (this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPos + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
+        // Sidescroll the canvas if the player is sufficiently far out to the screen and still alive
+        if (this.state > 0 && this.x + canvasPos > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPos + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
           canvasPos -= this.xv;
           translate(-this.xv,0);
-        } else if (this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
+        } else if (this.state > 0 && this.x + canvasPos < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPos < 0) {
           canvasPos -= this.xv;
           translate(-this.xv,0);
         }
