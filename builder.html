@@ -41,7 +41,8 @@
       // Map stuff
       let mapArray = [];
       const blockSize = 32;
-      let canvasPos = 0;
+      let canvasPosX = 0;
+      let canvasPosY = 0;
       updatesPerSecond = 60;
 
       // Look if a map is locally saved, and use that if so is the case
@@ -85,7 +86,19 @@
 
       // What block is currently selected
       let selected = "bricks";
-      // Blocktypes: "bricks", "block", "flagpole", "goomba"
+
+      // All supported block types and their rendering instructions
+      let blockTypes = [
+        ["bricks",gameTileSheet,1,1,0,221,16,16,32,32,1,1],
+        ["block",gameTileSheet,1,1,102,0,16,16,32,32,1,1],
+        ["flagpole",objectSpriteSheet,1,1,765,435,16,16,32,32],
+        ["mushroom_block",gameTileSheet,1,1,34,0,16,16,32,32,1,1],
+        ["used_block",gameTileSheet,1,1,85,0,16,16,32,32,1,1],
+        ["goomba",enemySpriteSheet,2,.4,0,1,16,16,32,32],
+      ]
+
+      // Block selection menu
+      let menuOpen = false;
 
       // Scaling (20 blocks tall)
       const scale_factor = blockSize * 20 / totalHeight;
@@ -123,23 +136,23 @@
       function drawMap() {
 
         // Draw background
-        rectangle(-canvasPos,0,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
+        rectangle(-canvasPosX,-canvasPosY,totalWidth * scale_factor,totalHeight * scale_factor,"#93bbec");
 
         // Find middle point on screen
-        let screen_mid = canvasPos + totalWidth * scale_factor / 2
+        let screen_mid = canvasPosX + totalWidth * scale_factor / 2
 
         // Draw grid lines
         let screenBlockWidth = totalWidth * scale_factor / blockSize + 2;
         let screenBlockHeight = 22;
 
         // Draw vertical lines
-        for (let i = floor(-canvasPos / 32); i < screenBlockWidth + floor(-canvasPos / 32); i++) {
-          line((i-1)*32,0,(i-1)*32,totalHeight * scale_factor,1,"grey");
+        for (let i = floor(-canvasPosX / 32); i < screenBlockWidth + floor(-canvasPosX / 32); i++) {
+          line((i-1)*32,-canvasPosY,(i-1)*32,totalHeight * scale_factor -canvasPosY,1,"grey");
         }
 
         // Draw horizontal lines
-        for (let i = 0; i < screenBlockHeight; i++) {
-          line(-canvasPos,(i-1)*32,totalWidth * scale_factor-canvasPos,(i-1)*32,1,"grey");
+        for (let i = floor(-canvasPosY / 32); i < screenBlockHeight + floor(-canvasPosX / 32); i++) {
+          line(-canvasPosX,(i-1)*32,totalWidth * scale_factor-canvasPosX,(i-1)*32,1,"grey");
         }
 
         // Go through every block
@@ -170,13 +183,24 @@
       }
 
       // Made to see if there is a block in the map that has the properties of the block sought after. Made for checking if to remove blocks
-      function lookForBlockInMap(x,y) {
-        for (let i=0; i<mapArray.length; i++) {
-          if (mapArray[i][0] == x && mapArray[i][1] == y) {
-            // Return i+1 so that the first block (index 0) won't count as non-existent
-            return i+1;
+      function lookForBlockInMap(a,b) {
+        if (a && b) { // Look for coordinates
+          for (let i=0; i<mapArray.length; i++) {
+            if (mapArray[i][0] == a && mapArray[i][1] == b) {
+              // Return i+1 so that the first block (index 0) won't count as non-existent
+              return i+1;
+            }
+          }
+        } else if (a) { // Look for a specific block
+          for (let i=0; i<mapArray.length; i++) {
+            if (mapArray[i][2] == a) {
+              // Return i+1 so that the first block (index 0) won't count as non-existent
+              return i+1;
+            }
           }
         }
+        // If not found, return false
+        return false;
       }
 
       // If window is getting unloaded, save map progress
@@ -202,6 +226,9 @@
           // If pressing P to only play the map
           gameState.playingSavedMap = true;
           window.location.href = "main.html";
+        } else if (event.keyCode === 109) {
+          // If pressing M to open up block selection menu
+          menuOpen = !menuOpen;
         }
       };
 
@@ -210,56 +237,66 @@
         // First clear the canvas from the previous frame
         clearScreen();
 
-        // Move the canvas
+        // Move the canvas in X
         if (keyboard.right && keyboard.shift) {
-          canvasPos -= 16;
+          canvasPosX -= 16;
           translate(-16,0);
         } else if (keyboard.right) {
-          canvasPos -= 8;
+          canvasPosX -= 8;
           translate(-8,0);
         }
         if (keyboard.left && keyboard.shift) {
-          if (canvasPos < -8) {
-            canvasPos += 16;
+          if (canvasPosX < -8) {
+            canvasPosX += 16;
             translate(16,0);
-          } else if (canvasPos < 0) {
-            canvasPos += 8;
+          } else if (canvasPosX < 0) {
+            canvasPosX += 8;
             translate(8,0);
           }
         } else if (keyboard.left) {
-          if (canvasPos < 0) {
-            canvasPos += 8;
+          if (canvasPosX < 0) {
+            canvasPosX += 8;
             translate(8,0);
           } 
         } 
-        
-        // Select the right block
-        if (keyboard.one) {
-          selected = "bricks";
-        } else if (keyboard.two) {
-          selected = "block";
-        } else if (keyboard.three) {
-          selected = "mushroom_block";
-        } else if (keyboard.four) {
-          selected = "goomba";
-        } else if (keyboard.five) {
-          selected = "flagpole";
+
+        // Move the canvas in Y
+        if (keyboard.up && keyboard.shift) {
+          canvasPosY += 16;
+          translate(0,16);
+        } else if (keyboard.up) {
+          canvasPosY += 8;
+          translate(0,8);
         }
+        if (keyboard.down && keyboard.shift) {
+          if (canvasPosY > 8) {
+            canvasPosY -= 16;
+            translate(0,-16);
+          } else if (canvasPosY > 0) {
+            canvasPosY -= 8;
+            translate(0,-8);
+          }
+        } else if (keyboard.down) {
+          if (canvasPosY > 0) {
+            canvasPosY -= 8;
+            translate(0,-8);
+          } 
+        } 
 
         // If clicking, check what block is clicked on
-        if (mouse.left) {
-          let mouseXblock = floor((mouse.x * scale_factor -canvasPos) / blockSize);
+        if (mouse.left && !menuOpen) {
+          let mouseXblock = floor((mouse.x * scale_factor -canvasPosX) / blockSize);
           let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
-
-          if (! blockIndex) {
+          
+          if (! blockIndex && (selected != "flagpole" || !lookForBlockInMap("flagpole"))) {
             mapArray.push([mouseXblock,mouseYblock,selected]);
           }
         
         // Removing blocks if right clicked on
-        } else if (mouse.right) {
-          let mouseXblock = floor((mouse.x * scale_factor -canvasPos) / blockSize);
+        } else if (mouse.right && !menuOpen) {
+          let mouseXblock = floor((mouse.x * scale_factor -canvasPosX) / blockSize);
           let mouseYblock = ceil((totalHeight - mouse.y) * scale_factor / blockSize);
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
@@ -272,6 +309,53 @@
 
         // Finally draw the map
         drawMap();
+        
+        // Selected block icon and info text
+        if (!menuOpen) {
+          text(90 -canvasPosX,30 -canvasPosY,20,"Press M to select block","black");
+
+          for (let i=0; i<blockTypes.length; i++) {
+            let block = blockTypes[i];
+            if (block[0] == selected) {
+              drawAnimImg(block[1],block[2],block[3],10 -canvasPosX,10 -canvasPosY,block[4],block[5],block[6],block[7],block[8]*2,block[9]*2,block[10],block[11]);
+            }
+          }
+        }
+
+        // Draw block selection menu if open
+        if (menuOpen) {
+          rectangle(100 -canvasPosX,100 -canvasPosY,(totalWidth-200)*scale_factor,(totalHeight-200)*scale_factor,"grey");
+          text(110 -canvasPosX,140 -canvasPosY,30,"Select a block","black");
+          text(110 -canvasPosX,100 + (totalHeight-200)*scale_factor - 30 -canvasPosY,10,"Enter - Upload map","black");
+          text(110 -canvasPosX,100 + (totalHeight-200)*scale_factor - 15 -canvasPosY,10,"N - New map","black");
+
+          // Draw all available blocks
+          let row = 0;
+          let blocksPerRow = floor((totalWidth-240) / (blockSize * 1.5));
+          for (let i=0; i<blockTypes.length; i++) {
+            let block = blockTypes[i];
+            if (i-blocksPerRow*row > blocksPerRow) {row++}
+
+            let x = 110 + i * blockSize * 3 - blocksPerRow * row;
+            let y = 160 + row * blockSize * 3;
+
+            // If clicked, check if block is clicked and select block + close menu if so
+            if (mouse.left) {
+              if (mouse.x*scale_factor >= x && mouse.x*scale_factor <= x+blockSize*2 && mouse.y*scale_factor >= y && mouse.y*scale_factor <= y+blockSize*2) {
+                selected = block[0];
+                window.setTimeout(function() {
+                  menuOpen = false;
+                },70);
+              }
+            }
+
+            // Draw box behind to show selected block
+            if (block[0] == selected) {
+              rectangle(x-5 -canvasPosX,y-5 -canvasPosY,74,74,"blue");
+            }
+            drawAnimImg(block[1],block[2],block[3],x -canvasPosX,y -canvasPosY,block[4],block[5],block[6],block[7],block[8]*2,block[9]*2,block[10],block[11]);
+          }
+        }
       }
 
     </script>
