@@ -31,14 +31,16 @@
         </a>
     </span>
 
-    <div class="course-book">
+    <div class="course-book" id="courses">
       <script>
         // XHR Request function
-        function XHR(method,url,body) {
+        function XHR(method,url,body,callback) {
           let xhr = new XMLHttpRequest();
           xhr.open(method,url,true);
+          xhr.onload = function() {
+            callback(xhr.responseText);
+          }
           xhr.send(body);
-          return xhr.responseText;
         }
           
         function playCourse(n) {
@@ -55,18 +57,25 @@
           window.location.href = "main.html";
         }
         
-        let courses = JSON.parse(XHR("GET","courses.json",null)); 
-        
-        for (let i = 0; i < courses.length; i++) {
+        // Download courses
+        let courses;
+        XHR("GET","courses.json",null,function(text) {
+          courses = JSON.parse(text);
           
-          // Flex book entries
-          document.write('<div class="course-container">');
-          document.write('<div class="course-name course-data">' + courses[i]["name"] + '</div>');
-          document.write('<div class="course-creator course-data">' + courses[i]["creator"] + '</div>');
-          document.write('<div class="course-likes">' + courses[i]["likes"] + '</div>');
-          document.write('<div class="course-id course-data" onclick="playCourse('+i+')">' + courses[i]["courseId"] + '</div>'); // If clicked on, play the course
-          document.write('</div>');
-        }
+          let coursesText = "";
+          // Flexbox coursebook entries added from the courses JSON data
+          for (let i = 0; i < courses.length; i++) {
+            coursesText += 
+            '<div class="course-container">' + '\n' +
+            '<div class="course-name course-data">' + courses[i]["name"] + '</div>' + '\n' +
+            '<div class="course-creator course-data">' + courses[i]["creator"] + '</div>' + '\n' +
+            '<div class="course-likes">' + courses[i]["likes"] + '</div>' + '\n' +
+            '<div class="course-id course-data" onclick="playCourse('+i+')">' + courses[i]["courseId"] + '</div>' + '\n' + // If clicked on, play the course
+            '</div>' + '\n';
+          }
+
+          document.getElementById("courses").innerHTML = coursesText;
+        });
       </script>
 
       
