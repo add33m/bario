@@ -184,16 +184,16 @@
 
       // Made to see if there is a block in the map that has the properties of the block sought after. Made for checking if to remove blocks
       function lookForBlockInMap(a,b) {
-        if (a && b) { // Look for coordinates
+        if (a != null && b != null) { // Look for coordinates
           for (let i=0; i<mapArray.length; i++) {
-            if (mapArray[i][0] == a && mapArray[i][1] == b) {
+            if (mapArray[i][0] === a && mapArray[i][1] === b) {
               // Return i+1 so that the first block (index 0) won't count as non-existent
               return i+1;
             }
           }
-        } else if (a) { // Look for a specific block
+        } else if (a != null) { // Look for a specific block
           for (let i=0; i<mapArray.length; i++) {
-            if (mapArray[i][2] == a) {
+            if (mapArray[i][2] === a) {
               // Return i+1 so that the first block (index 0) won't count as non-existent
               return i+1;
             }
@@ -295,7 +295,7 @@
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
           
-          if (! blockIndex && (selected != "flagpole" || !lookForBlockInMap("flagpole"))) {
+          if (blockIndex === false && (selected != "flagpole" || !lookForBlockInMap("flagpole"))) {
             mapArray.push([mouseXblock,mouseYblock,selected]);
           }
         
@@ -306,7 +306,7 @@
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
 
-          if (blockIndex) {
+          if (blockIndex !== false) {
             // Counter the i+1
             mapArray.splice(blockIndex-1,1);
           }
