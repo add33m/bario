@@ -314,7 +314,12 @@
                     let mushroom = new IEntity("mushroom",mapArray[i][0],mapArray[i][1]+1)
                     iEntities.push(mushroom);
                     mushroom.ai = true;
-                    mushroom.facing = 1;
+                    if (mushroom.x < ent.x) {
+                      mushroom.facing = 0;
+                    } else {
+                      mushroom.facing = 1;
+                    }
+                    
                   },200)
                 }
 
@@ -336,7 +341,7 @@
                   },500)
                 }
 
-                // If hitting a spikes block, damage/kill the player and make it invincible for a while
+                // If hitting a spikes block, damage the player and make it invincible for a while
                 if (mapArray[i][2] == "spikes" && ent.state == 2) {
                   let lastState = ent.state;
                   ent.state -= 5;
@@ -611,32 +616,29 @@
             this.jumped = true
           } else if (! controls.jump() && this.touching_ground) {this.jumped = false}
         }
+      }
 
+      moveCanvas() {
         // Sidescroll the canvas if the player is sufficiently far out to the screen and still alive
-        if (this.state > 0 && this.x + canvasPosX > totalWidth * scale_factor * .55 && this.xv > 0 && -canvasPosX + (totalWidth * scale_factor) < (flagpolePosX + blockSize * 7)) {
+        if (this.state != -1 && this.x + canvasPosX > totalWidth * scale_factor * .55 && this.xv > 0 && gameState < 2) {
           canvasPosX -= this.xv;
           translate(-this.xv,0);
-        } else if (this.state > 0 && this.x + canvasPosX < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPosX < 0) {
+        } else if (this.state != -1 && this.x + canvasPosX < totalWidth * scale_factor * .45 && this.xv < 0 && canvasPosX < 0) {
           canvasPosX -= this.xv;
           translate(-this.xv,0);
         }
-        // Make sure canvas doesn't scroll too far in either direction
+        // Make sure canvas doesn't scroll too far to the left
         if (canvasPosX > 0) {
           translate(-canvasPosX,0);
           canvasPosX = 0;
-        } else if (-canvasPosX + (totalWidth * scale_factor) > (flagpolePosX + blockSize * 7) && canvasPosX != 0) {
-          // Find how much too far it went
-          let diff = -canvasPosX + (totalWidth * scale_factor) - (flagpolePosX + blockSize * 7);
-          translate(diff,0);
-          canvasPosX += diff;
         }
 
         // Vertical scroll if too far up on the screen
-        if (this.state > 0 && this.y - canvasPosY < totalHeight * scale_factor * .1 && this.yv < 0) {
+        if (this.state != -1 && this.y - canvasPosY < totalHeight * scale_factor * .1 && this.yv < 0) {
           let diff = abs((this.y - canvasPosY) - totalHeight * scale_factor * .1);
           canvasPosY -= diff;
           translate(0,diff);
-         } else if (this.state > 0 && this.y+this.height - canvasPosY > totalHeight * scale_factor * .7 && this.yv > 0 && canvasPosY < 0) {
+         } else if (this.state != -1 && this.y+this.height - canvasPosY > totalHeight * scale_factor * .7 && this.yv > 0 && canvasPosY < 0) {
           let diff = abs((this.y+this.height - canvasPosY) - totalHeight * scale_factor * .7);
           canvasPosY += diff;
           translate(0,-diff);
@@ -951,8 +953,6 @@
       totalHeight = window.innerHeight;
 
       if (gameState > 0) {
-        drawMap();
-
         // Perform collision checks and apply physics
         if (activatePhysics) {
           player1.apply_forces();
@@ -981,6 +981,7 @@
           player1.state -= 10;
           gameState = 4;
           playSound(winUrl);
+          player1.facing = 0;
           player1.xv = 7;
           player1.yv = -15;
           player1.friction = 1.15;
@@ -1014,6 +1015,8 @@
         }
         
         // Render map and objects
+        player1.moveCanvas();
+        drawMap();
         drawIEntities();
         player1.draw(); 
 
