@@ -58,41 +58,41 @@ http.createServer(function(request,response) {
             return false;
           }
 
-          // Go through every block and make sure it is a valid block
-          let blocks = ["inv","bricks","block","flagpole","mushroom_block","used_block","goomba"] // All allowed/valid blocks
-          for (let i=0; i<map.length;i++) {
-            let block = map[i];
-            if (!Array.isArray(block)) {
-              // If block isn't even an array
-              cprint("Invalid block detected!");
-              // Finish XHR with 403 response
-              response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
-              response.end("Invalid block detected!");
-              cprint("Ended XHR");
-              return false;
-            }
+          // Go through every block and make sure it is a valid block (unnecessary due to client defaulting to brick block)
+          // let blocks = ["inv","bricks","block","flagpole","mushroom_block","used_block","goomba"] // All allowed/valid blocks
+          // for (let i=0; i<map.length;i++) {
+          //   let block = map[i];
+          //   if (!Array.isArray(block)) {
+          //     // If block isn't even an array
+          //     cprint("Invalid block detected!");
+          //     // Finish XHR with 403 response
+          //     response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
+          //     response.end("Invalid block detected!");
+          //     cprint("Ended XHR");
+          //     return false;
+          //   }
 
-            if (isNaN(block[0]) || isNaN(block[1])) {
-              // If block coordinate is not a number
-              cprint("Invalid block coordinate detected!");
-              // Finish XHR with 403 response
-              response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
-              response.end("Invalid block coordinate detected!");
-              cprint("Ended XHR");
-              return false;
-            }
+          //   if (isNaN(block[0]) || isNaN(block[1])) {
+          //     // If block coordinate is not a number
+          //     cprint("Invalid block coordinate detected!");
+          //     // Finish XHR with 403 response
+          //     response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
+          //     response.end("Invalid block coordinate detected!");
+          //     cprint("Ended XHR");
+          //     return false;
+          //   }
 
-            let blockType = block[2]; // Blocktype is in index 2 of every block array: [x,y,"blocktype"]
-            if (blocks.indexOf(blockType) == -1) {
-              // If blocktype is not found in blocks array
-              cprint("Invalid blocktype detected!");
-              // Finish XHR with 403 response
-              response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
-              response.end("Invalid blocktype detected!");
-              cprint("Ended XHR");
-              return false;
-            }
-          }
+          //   let blockType = block[2]; // Blocktype is in index 2 of every block array: [x,y,"blocktype"]
+          //   if (blocks.indexOf(blockType) == -1) {
+          //     // If blocktype is not found in blocks array
+          //     cprint("Invalid blocktype detected!");
+          //     // Finish XHR with 403 response
+          //     response.writeHead(403, "Forbidden", {"Content-Type": "text/html"});
+          //     response.end("Invalid blocktype detected!");
+          //     cprint("Ended XHR");
+          //     return false;
+          //   }
+          // }
 
           // If nothing fails the test
           return true;
