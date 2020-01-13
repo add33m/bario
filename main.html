@@ -131,12 +131,18 @@
       ["goomba",enemySpriteSheet,2,.4,0,1,16,16,32,32],
       ["spikes",objectSpriteSheet,2,.15,119,1,16,16,32,32],
       ["flagpole",objectSpriteSheet,1,1,765,435,16,16,32,32],
+      ["flaghut",objectSpriteSheet,1,1,260,549,16*5,16*5,32,32],
     ];
 
     // Blocks that should not be drawn
     let nodraw = [
       "inv",
+      "flagpole",
       "goomba",
+    ]
+
+    let latedraw = [
+
     ]
 
     // Blocks that have no collision
@@ -884,12 +890,50 @@
         if (type == "flagpole") {
           drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
           drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - flagPos,765,435,16,16,32,32);
+        } else if (type == "flaghut") {
+          drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0] - 4) * blockSize,totalHeight * scale_factor - (mapArray[i][1] + 4) * blockSize,260,549,16*5,16*5,32*5,32*5);
         } else if (type == "mushroom_block") {
           drawAnimImg(gameTileSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,34,0,16,16,32,32,1,1);
         } else if (type == "goomba" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor * .6 && ! mapArray[i][3]) {
           // If close enough, spawn a goomba
           iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]));
           mapArray[i][3] = true;
+        }
+      }
+    }
+
+    // Draw everything that should be drawn on top of the player/other entities
+    function drawMapLate() {
+      // Go through every block
+      for (let i = 0; i < mapArray.length; i++) {
+        // Find block type
+        let type = mapArray[i][2];
+
+        // Only draw if not a nodraw block
+        let isLatedraw = false;
+        for (let i=0; i<latedraw.length; i++) {
+          let blockType = latedraw[i];
+          if (blockType == type) {
+            isLatedraw = true;
+          }
+        }
+
+        let block = blockTypes[0];
+
+        for (let i=0; i<blockTypes.length; i++) {
+          if (blockTypes[i][0] === type) {
+            block = blockTypes[i];
+          }
+        }
+
+        if (isLatedraw) {
+          // Draw the image with the right texture, and animated if should be
+          drawAnimImg(block[1],block[2],block[3],mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize,block[4],block[5],block[6],block[7],block[8],block[9],block[10],block[11]);
+        }
+       
+        // Draw/process all exceptions
+        if (type == "flaghut") {
+          drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0] - 1.5) * blockSize,totalHeight * scale_factor - (mapArray[i][1] + 1.5) * blockSize,300,589,16*2.5,16*2.5,32*2.5,32*2.5);
         }
       }
     }
@@ -936,8 +980,6 @@
             if (entity.vis_state == 0) {
               drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
             } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
-          } else if (type == "test") {
-            drawImg(bricksUrl,mapArray[i][0],mapArray[i][1]);
           } else if (type == "mushroom") {
             drawAnimImg(playerSpriteSheet,1,1,entity.x,entity.y,0,588,16,16,32,32,1,1);
           }
@@ -1018,7 +1060,9 @@
         player1.moveCanvas();
         drawMap();
         drawIEntities();
-        player1.draw(); 
+        player1.draw();
+
+        drawMapLate();
 
         if (player1.debug) {console.log(player1.yv +" "+ player1.xv)}
       

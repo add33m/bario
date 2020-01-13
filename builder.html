@@ -110,6 +110,7 @@
         ["goomba",enemySpriteSheet,2,.4,0,1,16,16,32,32],
         ["spikes",objectSpriteSheet,2,.15,119,1,16,16,32,32],
         ["flagpole",objectSpriteSheet,1,1,765,435,16,16,32,32],
+        ["flaghut",objectSpriteSheet,1,1,260,549,16*5,16*5,32,32],
       ];
 
       // Block selection menu
@@ -191,6 +192,8 @@
             if (type == "flagpole") {
               drawAnimImg(objectSpriteSheet,1,1,mapArray[i][0] * blockSize,totalHeight * scale_factor - mapArray[i][1] * blockSize - 288,765,452,16,160,32,320);
               drawAnimImg(objectSpriteSheet,1,1,(mapArray[i][0]) * blockSize - 18,totalHeight * scale_factor - mapArray[i][1] * blockSize - blockSize * 8,765,435,16,16,32,32);
+            } else if (type == "flaghut") {
+              drawAnimImg(block[1],block[2],block[3],(mapArray[i][0] - 4) * blockSize,totalHeight * scale_factor - (mapArray[i][1] + 4) * blockSize,block[4],block[5],block[6],block[7],block[8]*5,block[9]*5,block[10],block[11]);
             }
           }
         }
@@ -309,7 +312,7 @@
 
           let blockIndex = lookForBlockInMap(mouseXblock,mouseYblock);
           
-          if (blockIndex === false && (selected != "flagpole" || !lookForBlockInMap("flagpole"))) {
+          if (blockIndex === false && (selected != "flagpole" || !lookForBlockInMap("flagpole")) && (selected != "flaghut" || !lookForBlockInMap("flaghut"))) {
             mapArray.push([mouseXblock,mouseYblock,selected]);
           }
         
