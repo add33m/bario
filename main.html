@@ -272,9 +272,6 @@
         let setXv;
         let setYv;
         let ret;
-
-        // Make sure ON/OFF switch can't be switch on or off multiple times per tick
-        let hasFlickedSwitch = false;
         
         // Call off the collision detection if not alive
         if (this.state == 0 || this.state == -1) {return null}
@@ -347,8 +344,8 @@
                 }
 
                 // ON/OFF switches and changing red/blue blocks to on/off
-                if (side == 3 && mapArray[i][2] == "switch_on" && abs(vel) > activation_threshold && !hasFlickedSwitch) {
-                  hasFlickedSwitch = true;
+                if (side == 3 && mapArray[i][2] == "switch_on" && abs(vel) > activation_threshold && !ent.hasFlickedSwitch) {
+                  ent.hasFlickedSwitch = true;
                   // Change all switches to off and change red/blue blocks to their correct state
                   for (let i=0; i<mapArray.length; i++) {
                     let block = mapArray[i];
@@ -360,8 +357,12 @@
                       block[2] = "blue_on";
                     }
                   }
-                } else if (side == 3 && mapArray[i][2] == "switch_off" && abs(vel) > activation_threshold && !hasFlickedSwitch) {
-                  hasFlickedSwitch = true;
+                  window.setTimeout(function(){
+                    ent.hasFlickedSwitch = false;
+                  },100);
+
+                } else if (side == 3 && mapArray[i][2] == "switch_off" && abs(vel) > activation_threshold && !ent.hasFlickedSwitch) {
+                  ent.hasFlickedSwitch = true;
                   // Change all switches to on and change red/blue blocks to their correct state
                   for (let i=0; i<mapArray.length; i++) {
                     let block = mapArray[i];
@@ -373,6 +374,9 @@
                       block[2] = "blue_off";
                     }
                   }
+                  window.setTimeout(function(){
+                    ent.hasFlickedSwitch = false;
+                  },100);
                 }
 
                 // If hit flagpole, start going down it
@@ -561,13 +565,18 @@
 
         // Debug line indicating what blocks are being calculated for collision
         if (this.debug) {
-          line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2, "black");
+          line(this.x + this.xv + this.width/2, this.y + this.yv + this.height/2, object.x + object.width/2, object.y + object.height/2,2, "black");
         }
 
         // If a full block, use standard collision physics
         if (!isTopcollide) {
           // Check if entity will be inside object next tick
           if (dyv < this.height/2 + object.height/2 && dxv < this.width/2 + object.width/2) {
+
+            // Draw block as blue if entity will collide
+            if (this.debug) {
+              rectangle(object.x,object.y,object.width,object.height,"blue");
+            }
             
             // Check if the entity is entering in the x axis
             if (dx * (this.height / 2 + object.height / 2) > dy * (this.width / 2 + object.width / 2) && dy < this.height/2 + object.height/2) {
@@ -607,6 +616,11 @@
         } else { // If a top collision only block use special collision physics
           // Check if within x range of block, above block and will be inside block next tick
           if (dxv < this.width/2 + object.width/2 && (this.y + this.height) <= object.y && (this.y + this.yv + this.height) >= object.y) {
+            // Draw block as blue if entity will collide
+            if (this.debug) {
+              rectangle(object.x,object.y,object.width,object.height,"blue");
+            }
+
             object.action(this.yv,2);
 
             setYv = dy - this.height/2 - object.height/2 - .1; // .1 to prevent error where you'll go through at low velocities (float error?)
@@ -636,6 +650,9 @@
         this.friction = 1.4;
         this.jumped = false;
         this.playerModel = playerModel;
+
+        // Make sure ON/OFF switch can't be switch on or off multiple times per tick
+        this.hasFlickedSwitch = false;
       }
       
       // Apply gravity and input forces to entity velocity, and check for death
@@ -1066,6 +1083,9 @@
     function update() {
       clearScreen();
 
+      // Render map first of all
+      drawMap();
+
       totalWidth = window.innerWidth;
       totalHeight = window.innerHeight;
 
@@ -1133,7 +1153,6 @@
         
         // Render map and objects
         player1.moveCanvas();
-        drawMap();
         drawIEntities();
         player1.draw();
 
