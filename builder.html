@@ -16,8 +16,10 @@
       function XHR(method,url,body) {
         let xhr = new XMLHttpRequest();
         xhr.open(method,url,true);
+        xhr.onload = function() {
+          return xhr.responseText;
+        }
         xhr.send(body);
-        return xhr.responseText;
       } 
       
       // ASSETS:
@@ -105,6 +107,11 @@
         ["vpipe2",gameTileSheet,1,1,255,0,16,16,32,32,1,1],
         ["vpipe3",gameTileSheet,1,1,238,17,16,16,32,32,1,1],
         ["vpipe4",gameTileSheet,1,1,255,17,16,16,32,32,1,1],
+
+        ["switch_on",gameTileSheet,1,1,34,391,16,16,32,32,1,1],
+        ["red_on",gameTileSheet,1,1,34,357,16,16,32,32,1,1],
+        ["blue_off",gameTileSheet,1,1,51,374,16,16,32,32,1,1],
+
         ["mushroom_block",gameTileSheet,1,1,34,0,16,16,32,32,1,1],
         ["used_block",gameTileSheet,1,1,85,0,16,16,32,32,1,1],
         ["goomba",enemySpriteSheet,2,.4,0,1,16,16,32,32],

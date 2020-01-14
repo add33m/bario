@@ -126,6 +126,14 @@
       ["vpipe2",gameTileSheet,1,1,255,0,16,16,32,32,1,1],
       ["vpipe3",gameTileSheet,1,1,238,17,16,16,32,32,1,1],
       ["vpipe4",gameTileSheet,1,1,255,17,16,16,32,32,1,1],
+
+      ["switch_on",gameTileSheet,1,1,34,391,16,16,32,32,1,1],
+      ["switch_off",gameTileSheet,1,1,51,391,16,16,32,32,1,1],
+      ["red_on",gameTileSheet,1,1,34,357,16,16,32,32,1,1],
+      ["blue_on",gameTileSheet,1,1,51,357,16,16,32,32,1,1],
+      ["red_off",gameTileSheet,1,1,34,374,16,16,32,32,1,1],
+      ["blue_off",gameTileSheet,1,1,51,374,16,16,32,32,1,1],
+
       ["mushroom_block",gameTileSheet,1,1,34,0,16,16,32,32,1,1],
       ["used_block",gameTileSheet,1,1,85,0,16,16,32,32,1,1],
       ["goomba",enemySpriteSheet,2,.4,0,1,16,16,32,32],
@@ -150,6 +158,8 @@
       "goomba",
       "shroomstem1",
       "shroomstem2",
+      "red_off",
+      "blue_off",
     ];
 
     // Blocks that only collide from the top
@@ -258,6 +268,13 @@
       
       // Function that checks if any block is within range to collide
       checkCollision() {
+        // Set what xv and yv should be so that it can be set when all collisions are done
+        let setXv;
+        let setYv;
+        let ret;
+
+        // Make sure ON/OFF switch can't be switch on or off multiple times per tick
+        let hasFlickedSwitch = false;
         
         // Call off the collision detection if not alive
         if (this.state == 0 || this.state == -1) {return null}
@@ -329,6 +346,35 @@
                   },200)
                 }
 
+                // ON/OFF switches and changing red/blue blocks to on/off
+                if (side == 3 && mapArray[i][2] == "switch_on" && abs(vel) > activation_threshold && !hasFlickedSwitch) {
+                  hasFlickedSwitch = true;
+                  // Change all switches to off and change red/blue blocks to their correct state
+                  for (let i=0; i<mapArray.length; i++) {
+                    let block = mapArray[i];
+                    if (block[2] == "switch_on") {
+                      block[2] = "switch_off";
+                    } else if (block[2] == "red_on") {
+                      block[2] = "red_off";
+                    } else if (block[2] == "blue_off") {
+                      block[2] = "blue_on";
+                    }
+                  }
+                } else if (side == 3 && mapArray[i][2] == "switch_off" && abs(vel) > activation_threshold && !hasFlickedSwitch) {
+                  hasFlickedSwitch = true;
+                  // Change all switches to on and change red/blue blocks to their correct state
+                  for (let i=0; i<mapArray.length; i++) {
+                    let block = mapArray[i];
+                    if (block[2] == "switch_off") {
+                      block[2] = "switch_on";
+                    } else if (block[2] == "red_off") {
+                      block[2] = "red_on";
+                    } else if (block[2] == "blue_on") {
+                      block[2] = "blue_off";
+                    }
+                  }
+                }
+
                 // If hit flagpole, start going down it
                 if (mapArray[i][2] == "flagpole" && ent.state < 5) {
                   activatePhysics = false;
@@ -375,7 +421,15 @@
             }
 
             // Perform collision detection
-            this.collide({x: x, y: y, width: width, height: height, action: collisionAction, name: mapArray[i][2], type: "block"});
+            ret = this.collide({x: x, y: y, width: width, height: height, action: collisionAction, name: mapArray[i][2], type: "block"});
+            if (ret) {
+              if (ret[0] != undefined) {
+                setXv = ret[0];
+              }
+              if (ret[1] != undefined) {
+                setYv = ret[1];
+              }
+            }
           }
         }
 
@@ -446,12 +500,32 @@
 
           // If in range and iEntity is active
           if (dy < this.height/2 + blockSize*2 && dx < this.width/2 + blockSize*2 && entity.state > 0) {
-            this.collide({x: entity.x, y: entity.y, width: entity.width, height: entity.height, action: collisionAction, name: entity.type, type: "iEntity", ref: entity});
+            ret = this.collide({x: entity.x, y: entity.y, width: entity.width, height: entity.height, action: collisionAction, name: entity.type, type: "iEntity", ref: entity});
+            if (ret) {
+              if (ret[0] != undefined) {
+                setXv = ret[0];
+              }
+              if (ret[1] != undefined) {
+                setYv = ret[1];
+              }
+            }
+            
           }
+        }
+        // Set the values that have been saved
+        if (setXv !== undefined) {
+          this.xv = setXv;
+        }
+        if (setYv !== undefined) {
+          this.yv = setYv;
         }
       }
 
       collide(object) {
+        // Set what xv and yv should be so that it can be set when all collisions are done
+        let setXv;
+        let setYv;
+
         // Call off collision if object is a noncollide block
         if (object.type == "block") {
           for (let i=0; i<noncollide.length; i++) {
@@ -501,14 +575,14 @@
               // Change the velocity so the entity intersects the border of the block next tick 
               if (this.x - object.x > 0) {
                 // From the left
-                object.action(this.xv,0)
+                object.action(this.xv,0);
 
-                this.xv = -(dx - this.width/2 - object.width/2);
+                setXv = -(dx - this.width/2 - object.width/2);
               } else {
                 // From the right
-                object.action(this.xv,1)
+                object.action(this.xv,1);
 
-                this.xv = dx - this.width/2 - object.width/2;
+                setXv = dx - this.width/2 - object.width/2;
               }
             }
             // Check if the entity is entering in the y axis
@@ -517,16 +591,16 @@
               // Change the velocity so the entity intersects the border of the block next tick 
               if (this.y - object.y < 0) {
                 // From the top
-                object.action(this.yv,2)
+                object.action(this.yv,2);
 
-                this.yv = dy - this.height/2 - object.height/2;
+                setYv = dy - this.height/2 - object.height/2;
                 this.touching_ground = true;
                 
             } else {
                 // From the bottom
-                object.action(this.yv,3)
+                object.action(this.yv,3);
 
-                this.yv = -(dy - this.height/2 - object.height/2);
+                setYv = -(dy - this.height/2 - object.height/2);
               }
             }
           }
@@ -535,10 +609,11 @@
           if (dxv < this.width/2 + object.width/2 && (this.y + this.height) <= object.y && (this.y + this.yv + this.height) >= object.y) {
             object.action(this.yv,2);
 
-            this.yv = dy - this.height/2 - object.height/2 - .1; // .1 to prevent error where you'll go through at low velocities (float error?)
+            setYv = dy - this.height/2 - object.height/2 - .1; // .1 to prevent error where you'll go through at low velocities (float error?)
             this.touching_ground = true;
           }
         }
+        return [setXv, setYv];
       }
 
       // Apply entity velocity to entity position
