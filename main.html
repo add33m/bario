@@ -85,6 +85,8 @@
     playerSpriteSheetReversed.src = "SMBPlayerSpritesReversed.png";
     const enemySpriteSheet = new Image();
     enemySpriteSheet.src = "SMBEnemySprites.png";
+    const enemySpriteSheetReversed = new Image();
+    enemySpriteSheetReversed.src = "SMBEnemySpritesReversed.png";
     const objectSpriteSheet = new Image();
     objectSpriteSheet.src = "SMBObjectSprites.png";
     const gameTileSheet = new Image();
@@ -147,6 +149,7 @@
       "inv",
       "flagpole",
       "goomba",
+      "koopa",
     ]
 
     let latedraw = [
@@ -156,6 +159,7 @@
     // Blocks that have no collision
     let noncollide = [
       "goomba",
+      "koopa",
       "shroomstem1",
       "shroomstem2",
       "red_off",
@@ -333,14 +337,8 @@
                     playSound(coinUrl,.4);
                     let mushroom = new IEntity("mushroom",mapArray[i][0],mapArray[i][1]+1)
                     iEntities.push(mushroom);
-                    mushroom.ai = true;
-                    if (mushroom.x < ent.x) {
-                      mushroom.facing = 0;
-                    } else {
-                      mushroom.facing = 1;
-                    }
-                    
-                  },200)
+                    mushroom.ai = true;                    
+                  },200);
                 }
 
                 // ON/OFF switches and changing red/blue blocks to on/off
@@ -453,20 +451,8 @@
             if (ent.classType == "player") {
               // If hitting a goomba from any side but the top, damage/kill the player and make it invincible for a while
               if (side != 2 && entity.type == "goomba" && ent.state == 2) {
-                let lastState = ent.state;
-                ent.state -= 5;
-                ent.y += 32;
-                ent.height = 32;
-                ent.vis_state -= 50;
-                window.setTimeout(function(){
-                  if (ent.state == lastState - 5) {
-                    ent.state = lastState - 1; 
-                  }        
-                },3000);
-
-              } else if (side != 2 && entity.type == "goomba" && ent.state == 1) {
-                // Kill the player if small
-                ent.state = 0;
+                // Hurt the player
+                ent.hurt();
 
               } else if (side == 2 && entity.type == "goomba" && ent.state > 0) {
                 // Stomp the goomba
@@ -798,6 +784,30 @@
         }
       }
 
+      // Hurt the player, or kill if small
+      hurt() {
+        if (this.state == 2) {
+          // Damage from big to small
+          let lastState = this.state;
+          this.state -= 5;
+          this.y += 32;
+          this.height = 32;
+          this.vis_state -= 50;
+
+          // Set invincible, then make hurtable again after 3 seconds
+          window.setTimeout(function(){
+            if (this.state == lastState - 5) {
+              this.state = lastState - 1; 
+            }        
+          },3000);
+
+        } else if (this.state == 1) {
+          // Kill if small
+          this.kill();
+        }
+        
+      }
+
       // Draw the player
       draw() {
         // Draw player texture depending on player state
@@ -880,6 +890,13 @@
         if (this.type == "goomba") {
           this.speed = 2;
           this.ai = true;
+        } else if (this.type == "koopa") {
+          this.speed = 2;
+          this.ai = true;
+
+          // Set the right height/pos
+          this.height = 36;
+          this.y -= 4;
         }
       }
 
@@ -990,6 +1007,10 @@
           // If close enough, spawn a goomba
           iEntities.push(new IEntity("goomba",mapArray[i][0],mapArray[i][1]));
           mapArray[i][3] = true;
+        } else if (type == "koopa" && abs(mapArray[i][0] * blockSize - screen_mid) < totalWidth * scale_factor * .6 && ! mapArray[i][3]) {
+          // If close enough, spawn a koopa
+          iEntities.push(new IEntity("koopa",mapArray[i][0],mapArray[i][1]));
+          mapArray[i][3] = true;
         }
       }
     }
@@ -1072,6 +1093,15 @@
             if (entity.vis_state == 0) {
               drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
             } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
+          } else if (type == "koopa") {
+            if (entity.vis_state == 0) {
+              drawAnimImg(enemySpriteSheetReversed,2,.4,entity.x,entity.y - 28,843,34,16,32,32,64);
+            } else if (entity.vis_state == 1) {
+              drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y - 28,0,34,16,32,32,64);
+            } else {
+              drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);
+            }
+            
           } else if (type == "mushroom") {
             drawAnimImg(playerSpriteSheet,1,1,entity.x,entity.y,0,588,16,16,32,32,1,1);
           }
