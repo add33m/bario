@@ -794,10 +794,13 @@
           this.height = 32;
           this.vis_state -= 50;
 
+          // Pass through this so context isn't lost in timeout function
+          let ent = this;
+
           // Set invincible, then make hurtable again after 3 seconds
           window.setTimeout(function(){
-            if (this.state == lastState - 5) {
-              this.state = lastState - 1; 
+            if (ent.state == lastState - 5) {
+              ent.state = lastState - 1; 
             }        
           },3000);
 
