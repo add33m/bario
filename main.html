@@ -437,7 +437,7 @@
             // If entity is a player
             if (ent.classType == "player") {
               // If hitting a goomba from any side but the top, damage/kill the player and make it invincible for a while
-              if (side != 2 && entity.type == "goomba" && ent.state == 2) {
+              if (side != 2 && entity.type == "goomba") {
                 // Hurt the player
                 ent.hurt();
 
@@ -453,7 +453,7 @@
               }
 
               // If hitting a koopa from any side but the top, damage/kill the player and make it invincible for a while
-              if (side != 2 && entity.type == "koopa" && ent.state == 2) {
+              if (side != 2 && entity.type == "koopa") {
                 // Hurt the player
                 ent.hurt();
 
@@ -461,7 +461,34 @@
                 // Kill/turn the koopa into a shell
                 entity.kill();
 
-                // Let player jump or bounce on goomba (delayed so collision doesn't affect jump)
+                // Let player jump or bounce on koopa (delayed so collision doesn't affect jump)
+                window.setTimeout(function(){
+                  if (controls.jump()) {ent.yv = -13.5}
+                  else {ent.yv = -8}
+                },3);
+              }
+
+              if (entity.type == "shell_green" && (side == 0 || side == 1) && entity.ai == false) {
+                entity.facing = abs(1-side);
+                entity.ai = true;
+              } else if (entity.type == "shell_green" && side != 2 && entity.ai == true) {
+                // Hurt player if hit
+                ent.hurt()
+              } else if (entity.type == "shell_green" && side == 2 && entity.ai == true) {
+                entity.ai = false;
+                // Let player jump or bounce on shell (delayed so collision doesn't affect jump)
+                window.setTimeout(function(){
+                  if (controls.jump()) {ent.yv = -13.5}
+                  else {ent.yv = -8}
+                },10);
+              } else if (entity.type == "shell_green" && side == 2 && entity.ai == false) {
+                entity.ai = true;
+                if (ent.x + ent.width / 2 < entity.x + entity.width / 2) {
+                  entity.facing = 0;
+                } else {
+                  entity.facing = 1;    
+                }
+                // Let player jump or bounce on koopa (delayed so collision doesn't affect jump)
                 window.setTimeout(function(){
                   if (controls.jump()) {ent.yv = -13.5}
                   else {ent.yv = -8}
@@ -647,7 +674,7 @@
       // Apply gravity and input forces to entity velocity, and check for death
       apply_forces() {
 
-        // If not on the ground, add gravity. Lower gravity if holding down jump key and going upwards, for longer jump 
+        // If not on the ground, add gravity. Lower gravity if holding down jump key and going upwards, for longer jump
         if (this.yv < 0 && controls.jump() && (this.state > 0 || this.state < -1) && this.state != 5) {
             this.yv += this.gravity / 2.4;
           } else if(this.state != 5) {
@@ -926,6 +953,9 @@
           }
         } else {
           this.xv = 0
+          if (this.type == "shell_green") {
+            this.vis_state = 2;
+          }
         }
 
         // Gravity
@@ -949,12 +979,13 @@
 
         } else if (this.type == "koopa") {
           this.type = "shell_green";
-          this.speed = 5;
+          this.speed = 6;
+          this.ai = false;
           this.y += 4;
           this.height = blockSize;
           this.width = blockSize;
 
-        } else if (this.type == "mushroom") {
+        } else {
           this.state = -1;
         }
       }
@@ -1113,9 +1144,11 @@
         if (entity.state >= 0) {
           // Draw the image with the right texture, and animated if should be
           if (type == "goomba") {
-            if (entity.vis_state == 0) {
+            if (entity.vis_state == 0 || entity.vis_state == 1) {
               drawAnimImg(enemySpriteSheet,2,.4,entity.x,entity.y,0,1,16,16,32,32);
-            } else {drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);}
+            } else {
+              drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,97,1,16,17,32,34);
+            }
           } else if (type == "koopa") {
             if (entity.vis_state == 0) {
               drawAnimImg(enemySpriteSheetReversed,2,.4,entity.x,entity.y - 28,843,34,16,32,32,64);
@@ -1126,7 +1159,11 @@
             }
             
           } else if (type == "shell_green") {
-            drawAnimImg(enemySpriteSheet,4,1,entity.x,entity.y,77,47,16,16,32,32,1,1);
+            if (entity.vis_state == 0 || entity.vis_state == 1) {
+              drawAnimImg(enemySpriteSheet,4,1,entity.x,entity.y,77,47,16,16,32,32,1,1);
+            } else {
+              drawAnimImg(enemySpriteSheet,1,1,entity.x,entity.y,77,47,16,16,32,32,1,1);
+            }
 
           } else if (type == "mushroom") {
             drawAnimImg(playerSpriteSheet,1,1,entity.x,entity.y,0,588,16,16,32,32,1,1);
@@ -1208,9 +1245,11 @@
         }
         
         // Render map and objects
-        player1.moveCanvas();
         drawIEntities();
         player1.draw();
+
+        // Move canvas to appropriate position
+        player1.moveCanvas();
 
         drawMapLate();
 
